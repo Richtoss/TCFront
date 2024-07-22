@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const response = await axios.post('https://tcbackend.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', response.data.token);
       navigate(response.data.isManager ? '/manager' : '/employee');
     } catch (err) {
