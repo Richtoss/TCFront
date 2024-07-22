@@ -48,7 +48,7 @@ const EmployeePage: React.FC = () => {
   const fetchTimecards = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get<Timecard[]>('http://localhost:5000/api/timecard', {
+      const res = await axios.get<Timecard[]>('https://tcbackend.onrender.com/api/timecard', {
         headers: { 'x-auth-token': token }
       });
       setTimecards(res.data.map(card => ({ ...card, expanded: false })));
@@ -95,7 +95,7 @@ const EmployeePage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post<Timecard>('http://localhost:5000/api/timecard', {
+      const res = await axios.post<Timecard>('https://tcbackend.onrender.com/api/timecard', {
         weekStartDate: mondayString,
         entries: [],
         totalHours: 0,
@@ -137,7 +137,7 @@ const EmployeePage: React.FC = () => {
         const newTotalHours = updatedEntries.reduce((total, entry) => 
           total + calculateHours(entry.startTime, entry.endTime), 0
         );
-        const res = await axios.put<Timecard>(`http://localhost:5000/api/timecard/${cardId}`, {
+        const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
           entries: updatedEntries,
           totalHours: newTotalHours
         }, {
@@ -167,7 +167,7 @@ const EmployeePage: React.FC = () => {
       const newTotalHours = updatedEntries.reduce((total, entry) => 
         total + calculateHours(entry.startTime, entry.endTime), 0
       );
-      const res = await axios.put<Timecard>(`http://localhost:5000/api/timecard/${cardId}`, {
+      const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
         entries: updatedEntries,
         totalHours: newTotalHours
       }, {
@@ -183,7 +183,7 @@ const EmployeePage: React.FC = () => {
   const deleteTimecard = async (cardId: string) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/timecard/${cardId}`, {
+      await axios.delete(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
         headers: { 'x-auth-token': token }
       });
       setTimecards(timecards.filter(card => card._id !== cardId));

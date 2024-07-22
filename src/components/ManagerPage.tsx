@@ -40,7 +40,7 @@ const ManagerPage: React.FC = () => {
   const fetchEmployeeData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get<Employee[]>('http://localhost:5000/api/timecard/all', {
+      const res = await axios.get<Employee[]>('https://tcbackend.onrender.com/api/timecard/all', {
         headers: { 'x-auth-token': token }
       });
       setEmployees(res.data.map(employee => ({
