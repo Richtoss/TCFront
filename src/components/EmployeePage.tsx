@@ -110,7 +110,6 @@ const EmployeePage: React.FC = () => {
 
     if (existingTimecard) {
       setError('A timecard for this week already exists.');
-      // Scroll to the top of the page to make the error message visible
       window.scrollTo(0, 0);
       return;
     }
@@ -133,7 +132,6 @@ const EmployeePage: React.FC = () => {
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
-      // Scroll to the top of the page to make the error message visible
       window.scrollTo(0, 0);
     }
   };
@@ -221,6 +219,11 @@ const EmployeePage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
+  const hasCurrentWeekTimecard = (): boolean => {
+    const monday = getNextMonday();
+    return timecards.some(card => isSameWeek(new Date(card.weekStartDate), monday));
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
@@ -243,16 +246,16 @@ const EmployeePage: React.FC = () => {
       </button>
       <button 
         onClick={createNewTimecard} 
-        disabled={timecards.some(card => isSameWeek(new Date(card.weekStartDate), getNextMonday()))}
+        disabled={hasCurrentWeekTimecard()}
         style={{ 
           width: '100%', 
           marginBottom: '20px', 
           padding: '10px',
-          backgroundColor: timecards.some(card => isSameWeek(new Date(card.weekStartDate), getNextMonday())) ? '#cccccc' : '#4CAF50',
+          backgroundColor: hasCurrentWeekTimecard() ? '#cccccc' : '#4CAF50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          cursor: timecards.some(card => isSameWeek(new Date(card.weekStartDate), getNextMonday())) ? 'not-allowed' : 'pointer'
+          cursor: hasCurrentWeekTimecard() ? 'not-allowed' : 'pointer'
         }}
       >
         New Time Card
@@ -332,10 +335,12 @@ const EmployeePage: React.FC = () => {
                       <option value="">Select start time</option>
                       {startTimeOptions.map(time => (
                         <option key={time} value={time}>{time}</option>
-						))}
+                      ))}
                     </select>
                     <select
                       value={newEntry.endTime}
+                      onChange={(e) => setNewEntry
+					  value={newEntry.endTime}
                       onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
                       style={{ padding: '5px' }}
                     >
