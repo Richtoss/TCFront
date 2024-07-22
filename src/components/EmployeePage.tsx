@@ -98,21 +98,20 @@ const EmployeePage: React.FC = () => {
     return mondayOfDate1.getTime() === mondayOfDate2.getTime();
   };
 
-  const createNewTimecard = async () => {
+  const hasCurrentWeekTimecard = (): boolean => {
     const monday = getNextMonday();
-    const mondayString = monday.toISOString().split('T')[0];
+    return timecards.some(card => isSameWeek(new Date(card.weekStartDate), monday));
+  };
 
-    // Check if a timecard for this week already exists
-    const existingTimecard = timecards.find(card => {
-      const cardDate = new Date(card.weekStartDate);
-      return isSameWeek(cardDate, monday);
-    });
-
-    if (existingTimecard) {
+  const createNewTimecard = async () => {
+    if (hasCurrentWeekTimecard()) {
       setError('A timecard for this week already exists.');
       window.scrollTo(0, 0);
       return;
     }
+
+    const monday = getNextMonday();
+    const mondayString = monday.toISOString().split('T')[0];
 
     try {
       const token = localStorage.getItem('token');
@@ -217,11 +216,6 @@ const EmployeePage: React.FC = () => {
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  };
-
-  const hasCurrentWeekTimecard = (): boolean => {
-    const monday = getNextMonday();
-    return timecards.some(card => isSameWeek(new Date(card.weekStartDate), monday));
   };
 
   return (
@@ -338,15 +332,15 @@ const EmployeePage: React.FC = () => {
                       ))}
                     </select>
                     <select
-					  value={newEntry.endTime}
-					  onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
-					  style={{ padding: '5px' }}
-					>
-					  <option value="">Select end time</option>
-					  {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
-						<option key={time} value={time}>{time}</option>
-					  ))}
-					</select>
+                      value={newEntry.endTime}
+                      onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+                      style={{ padding: '5px' }}
+                    >
+                      <option value="">Select end time</option>
+                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
                     <input
                       type="text"
                       placeholder="Description"
