@@ -338,17 +338,15 @@ const EmployeePage: React.FC = () => {
                       ))}
                     </select>
                     <select
-                      value={newEntry.endTime}
-                      onChange={(e) => setNewEntry
 					  value={newEntry.endTime}
-                      onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
-                      style={{ padding: '5px' }}
-                    >
-                      <option value="">Select end time</option>
-                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
+					  onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+					  style={{ padding: '5px' }}
+					>
+					  <option value="">Select end time</option>
+					  {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+						<option key={time} value={time}>{time}</option>
+					  ))}
+					</select>
                     <input
                       type="text"
                       placeholder="Description"
