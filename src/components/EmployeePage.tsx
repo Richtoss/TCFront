@@ -332,3 +332,78 @@ const EmployeePage: React.FC = () => {
                       <option value="">Select start time</option>
                       {startTimeOptions.map(time => (
                         <option key={time} value={time}>{time}</option>
+						))}
+                    </select>
+                    <select
+                      value={newEntry.endTime}
+                      onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+                      style={{ padding: '5px' }}
+                    >
+                      <option value="">Select end time</option>
+                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={newEntry.description}
+                      onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
+                      style={{ padding: '5px' }}
+                    />
+                    <button 
+                      onClick={() => addEntry(timecard._id)}
+                      style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#4CAF50', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      Add Entry
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {!timecard.completed && (
+                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                  <button 
+                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#2196F3', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
+                  </button>
+                  <button 
+                    onClick={() => deleteTimecard(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#f44336', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Delete Time Card
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default EmployeePage;
