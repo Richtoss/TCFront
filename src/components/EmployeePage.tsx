@@ -25,6 +25,7 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
+  const [employeeName, setEmployeeName] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -43,6 +44,7 @@ const EmployeePage: React.FC = () => {
 
   useEffect(() => {
     fetchTimecards();
+    fetchEmployeeName();
   }, []);
 
   const fetchTimecards = async () => {
@@ -55,6 +57,18 @@ const EmployeePage: React.FC = () => {
     } catch (err) {
       console.error('Error fetching timecards:', err);
       setError('Failed to fetch timecards. Please try again later.');
+    }
+  };
+
+  const fetchEmployeeName = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('https://tcbackend.onrender.com/api/auth/me', {
+        headers: { 'x-auth-token': token }
+      });
+      setEmployeeName(res.data.name.split(' ')[0]); // Get the first name
+    } catch (err) {
+      console.error('Error fetching employee name:', err);
     }
   };
 
@@ -202,6 +216,7 @@ const EmployeePage: React.FC = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {employeeName}</h2>
       <button 
         onClick={handleLogout} 
         style={{ 
@@ -253,7 +268,7 @@ const EmployeePage: React.FC = () => {
             onClick={() => toggleTimecard(timecard._id)} 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <h2 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <h2 style={{ margin: 0 }}>{formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
             <span>{timecard.expanded ? '▲' : '▼'}</span>
           </div>
           {timecard.expanded && (
