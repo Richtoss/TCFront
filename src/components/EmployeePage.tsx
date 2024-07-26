@@ -71,15 +71,17 @@ const EmployeePage: React.FC = () => {
     ));
   };
 
-  const getMostRecentMonday = (): Date => {
+  const getCurrentWeekMonday = (): Date => {
     const today = new Date();
     const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-    return new Date(today.setDate(diff));
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
   };
 
   const createNewTimecard = async () => {
-    const monday = getMostRecentMonday();
+    const monday = getCurrentWeekMonday();
     const mondayString = monday.toISOString().split('T')[0];
     
     // Display debug info
@@ -147,7 +149,6 @@ const EmployeePage: React.FC = () => {
       setError('Please fill in all required fields.');
     }
   };
-
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -347,58 +348,58 @@ const EmployeePage: React.FC = () => {
                       style={{ padding: '5px' }}
                     />
                     <button 
-                        onClick={() => addEntry(timecard._id)}
-                        style={{ 
-                          padding: '10px', 
-                          backgroundColor: '#4CAF50', 
-                          color: 'white', 
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Add Entry
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {!timecard.completed && (
-                  <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                    <button 
-                      onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                      onClick={() => addEntry(timecard._id)}
                       style={{ 
                         padding: '10px', 
-                        backgroundColor: '#2196F3', 
+                        backgroundColor: '#4CAF50', 
                         color: 'white', 
-                        border: 'none', 
-                        borderRadius: '4px', 
-                        cursor: 'pointer' 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
                       }}
                     >
-                      {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
-                    </button>
-                    <button 
-                      onClick={() => deleteTimecard(timecard._id)}
-                      style={{ 
-                        padding: '10px', 
-                        backgroundColor: '#f44336', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '4px', 
-                        cursor: 'pointer' 
-                      }}
-                    >
-                      Delete Time Card
+                      Add Entry
                     </button>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
+                </div>
+              )}
+              
+              {!timecard.completed && (
+                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                  <button 
+                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#2196F3', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
+                  </button>
+                  <button 
+                    onClick={() => deleteTimecard(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#f44336', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Delete Time Card
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
-  export default EmployeePage;
+export default EmployeePage;
