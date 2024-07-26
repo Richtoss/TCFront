@@ -73,33 +73,13 @@ const EmployeePage: React.FC = () => {
     ));
   };
 
-  const getNextMonday = (date: Date): Date => {
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-    return new Date(date.setDate(diff));
-  };
-
   const createNewTimecard = async () => {
     if (!selectedDate) {
       setError('Please select a start date for the timecard.');
       return;
     }
 
-    const monday = getNextMonday(selectedDate);
-    const mondayString = monday.toISOString().split('T')[0];
-
-    // Check if a timecard for this week already exists
-    const existingTimecard = timecards.find(card => {
-      const cardDate = new Date(card.weekStartDate);
-      return cardDate.getTime() === monday.getTime();
-    });
-
-    if (existingTimecard) {
-      setError('A timecard for this week already exists.');
-      setShowCalendar(false);
-      window.scrollTo(0, 0);
-      return;
-    }
+    const mondayString = selectedDate.toISOString().split('T')[0];
 
     try {
       const token = localStorage.getItem('token');
@@ -121,7 +101,6 @@ const EmployeePage: React.FC = () => {
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
-      window.scrollTo(0, 0);
     }
   };
 
@@ -208,7 +187,6 @@ const EmployeePage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
-  // The JSX part of the component will be continued in the next response
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
@@ -246,11 +224,10 @@ const EmployeePage: React.FC = () => {
       
       {showCalendar && (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <h3>Select the Monday to start your timecard:</h3>
+          <h3>Select the start date for your timecard:</h3>
           <DatePicker
             selected={selectedDate}
             onChange={(date: Date) => setSelectedDate(date)}
-            filterDate={(date: Date) => date.getDay() === 1} // Only allow Mondays
             inline
           />
           <div style={{ marginTop: '10px' }}>
