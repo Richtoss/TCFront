@@ -25,6 +25,7 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -76,7 +77,29 @@ const EmployeePage: React.FC = () => {
     return new Date(today.setDate(diff));
   };
 
+  const checkForDuplicateTimecard = async (): Promise<boolean> => {
+    setMessage('Checking for Dups');
+    const monday = getMostRecentMonday();
+    const mondayString = monday.toISOString().split('T')[0];
+
+    const existingTimecard = timecards.find(card => card.weekStartDate === mondayString);
+
+    if (existingTimecard) {
+      setMessage('Dups Found');
+      return true;
+    } else {
+      setMessage('No Dups');
+      return false;
+    }
+  };
+
   const createNewTimecard = async () => {
+    const isDuplicate = await checkForDuplicateTimecard();
+    if (isDuplicate) {
+      setError('A timecard for this week already exists.');
+      return;
+    }
+
     const monday = getMostRecentMonday();
     const mondayString = monday.toISOString().split('T')[0];
 
@@ -95,9 +118,11 @@ const EmployeePage: React.FC = () => {
       setTimecards([newCard, ...timecards]);
       setEditingCardId(newCard._id);
       setError('');
+      setMessage('');
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
+      setMessage('');
     }
   };
 
@@ -139,7 +164,6 @@ const EmployeePage: React.FC = () => {
       setError('Please fill in all required fields.');
     }
   };
-
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -219,6 +243,19 @@ const EmployeePage: React.FC = () => {
         New Time Card
       </button>
       
+      {message && (
+        <div style={{
+          backgroundColor: '#e6f7ff',
+          color: '#0066cc',
+          padding: '10px',
+          borderRadius: '4px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          {message}
+        </div>
+      )}
+
       {error && (
         <div style={{
           backgroundColor: '#ffcccc',
