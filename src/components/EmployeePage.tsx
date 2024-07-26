@@ -89,6 +89,8 @@ const EmployeePage: React.FC = () => {
       return true;
     } else {
       setMessage('No Dups');
+	  setMessage(card.weekStartDate);
+	  setMessage('mondayString');
       return false;
     }
   };
