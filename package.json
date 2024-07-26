@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^5.16.5",
+    "@mui/x-date-pickers": "^7.11.1",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-switch": "^1.1.0",
@@ -12,6 +16,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/react-datepicker": "^7.0.0",
     "axios": "^1.7.2",
+    "dayjs": "^1.11.12",
     "lucide-react": "^0.411.0",
     "react": "^18.3.1",
     "react-datepicker": "^7.3.0",

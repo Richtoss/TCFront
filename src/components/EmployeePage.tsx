@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
 
 interface TimecardEntry {
   id: number;
@@ -28,7 +30,7 @@ const EmployeePage: React.FC = () => {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -79,7 +81,7 @@ const EmployeePage: React.FC = () => {
       return;
     }
 
-    const mondayString = selectedDate.toISOString().split('T')[0];
+    const mondayString = selectedDate.format('YYYY-MM-DD');
 
     try {
       const token = localStorage.getItem('token');
@@ -142,7 +144,7 @@ const EmployeePage: React.FC = () => {
       setError('Please fill in all required fields.');
     }
   };
-
+  
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -225,11 +227,12 @@ const EmployeePage: React.FC = () => {
       {showCalendar && (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
           <h3>Select the start date for your timecard:</h3>
-          <DatePicker
-            selected={selectedDate}
-            onChange={(date: Date) => setSelectedDate(date)}
-            inline
-          />
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              value={selectedDate}
+              onChange={(newValue) => setSelectedDate(newValue)}
+            />
+          </LocalizationProvider>
           <div style={{ marginTop: '10px' }}>
             <button 
               onClick={createNewTimecard}
