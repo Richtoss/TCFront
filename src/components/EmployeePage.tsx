@@ -93,6 +93,18 @@ const EmployeePage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
   };
 
+  const getCurrentWeekMonday = (): Date => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  };
+
+  // Continued in Part 2...
+  // ...continued from Part 1
+
   const createNewTimecard = async () => {
     const monday = getCurrentWeekMonday();
     const mondayString = monday.toISOString().split('T')[0];
