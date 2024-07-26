@@ -80,12 +80,20 @@ const EmployeePage: React.FC = () => {
     return monday;
   };
 
+  const formatDate = (date: Date): string => {
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
   const createNewTimecard = async () => {
     const monday = getCurrentWeekMonday();
+    const formattedDate = formatDate(monday);
     const mondayString = monday.toISOString().split('T')[0];
     
     // Display debug info
-    setDebugInfo(`weekStartDate: ${monday.toDateString()}, mondayString: ${mondayString}`);
+    setDebugInfo(`weekStartDate: ${formattedDate}, mondayString: ${formattedDate}`);
     setTimeout(() => setDebugInfo(''), 2000);
 
     try {
@@ -188,11 +196,6 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  };
-
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
@@ -273,7 +276,7 @@ const EmployeePage: React.FC = () => {
             onClick={() => toggleTimecard(timecard._id)} 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <h2 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <h2 style={{ margin: 0 }}>Week of {formatDate(new Date(timecard.weekStartDate))} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
             <span>{timecard.expanded ? '▲' : '▼'}</span>
           </div>
           {timecard.expanded && (
