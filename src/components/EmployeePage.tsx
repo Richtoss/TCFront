@@ -25,7 +25,6 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -105,11 +104,9 @@ const EmployeePage: React.FC = () => {
       setTimecards([newCard, ...timecards]);
       setEditingCardId(newCard._id);
       setError('');
-      setMessage('New timecard created successfully.');
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
-      setMessage('');
     }
   };
 
@@ -225,19 +222,6 @@ const EmployeePage: React.FC = () => {
         New Time Card
       </button>
       
-      {message && (
-        <div style={{
-          backgroundColor: '#e6f7ff',
-          color: '#0066cc',
-          padding: '10px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}>
-          {message}
-        </div>
-      )}
-
       {error && (
         <div style={{
           backgroundColor: '#ffcccc',
