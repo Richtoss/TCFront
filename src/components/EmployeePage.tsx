@@ -20,11 +20,16 @@ interface Timecard {
   expanded?: boolean;
 }
 
+interface Employee {
+  firstName: string;
+}
+
 const EmployeePage: React.FC = () => {
   const [timecards, setTimecards] = useState<Timecard[]>([]);
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -43,6 +48,7 @@ const EmployeePage: React.FC = () => {
 
   useEffect(() => {
     fetchTimecards();
+    fetchEmployeeData();
   }, []);
 
   const fetchTimecards = async () => {
@@ -58,6 +64,19 @@ const EmployeePage: React.FC = () => {
     }
   };
 
+  const fetchEmployeeData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get<Employee>('https://tcbackend.onrender.com/api/employee', {
+        headers: { 'x-auth-token': token }
+      });
+      setEmployee(res.data);
+    } catch (err) {
+      console.error('Error fetching employee data:', err);
+      setError('Failed to fetch employee data. Please try again later.');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
@@ -69,20 +88,9 @@ const EmployeePage: React.FC = () => {
     ));
   };
 
-  const getCurrentWeekMonday = (): Date => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(today.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
-    return monday;
-  };
-
-  const formatDate = (date: Date): string => {
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
   };
 
   const createNewTimecard = async () => {
@@ -148,6 +156,7 @@ const EmployeePage: React.FC = () => {
       setError('Please fill in all required fields.');
     }
   };
+
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -187,9 +196,23 @@ const EmployeePage: React.FC = () => {
     }
   };
 
+  const markTimecardComplete = async (cardId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}/complete`, {}, {
+        headers: { 'x-auth-token': token }
+      });
+      setTimecards(timecards.map(card => card._id === cardId ? { ...res.data, expanded: true } : card));
+    } catch (err) {
+      console.error('Error marking timecard as complete:', err);
+      setError('Failed to mark timecard as complete. Please try again.');
+    }
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
+      {employee && <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {employee.firstName}!</h2>}
       <button 
         onClick={handleLogout} 
         style={{ 
@@ -241,7 +264,7 @@ const EmployeePage: React.FC = () => {
             onClick={() => toggleTimecard(timecard._id)} 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <h2 style={{ margin: 0 }}>Week of {formatDate(new Date(timecard.weekStartDate))} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <h2 style={{ margin: 0 }}>{formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
             <span>{timecard.expanded ? '▲' : '▼'}</span>
           </div>
           {timecard.expanded && (
@@ -359,6 +382,19 @@ const EmployeePage: React.FC = () => {
                     }}
                   >
                     Delete Time Card
+                  </button>
+                  <button 
+                    onClick={() => markTimecardComplete(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#FFA500', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Mark Complete
                   </button>
                 </div>
               )}
