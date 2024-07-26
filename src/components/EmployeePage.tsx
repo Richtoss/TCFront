@@ -26,6 +26,7 @@ const EmployeePage: React.FC = () => {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [message, setMessage] = useState<string>('');
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -77,33 +78,13 @@ const EmployeePage: React.FC = () => {
     return new Date(today.setDate(diff));
   };
 
-  const checkForDuplicateTimecard = async (): Promise<boolean> => {
-    setMessage('Checking for Dups');
-    const monday = getMostRecentMonday();
-    const mondayString = monday.toISOString().split('T')[0];
-
-    const existingTimecard = timecards.find(card => card.weekStartDate === mondayString);
-
-    if (existingTimecard) {
-      setMessage('Dups Found');
-      return true;
-    } else {
-      setMessage('No Dups');
-	  setMessage(card.weekStartDate);
-	  setMessage('mondayString');
-      return false;
-    }
-  };
-
   const createNewTimecard = async () => {
-    const isDuplicate = await checkForDuplicateTimecard();
-    if (isDuplicate) {
-      setError('A timecard for this week already exists.');
-      return;
-    }
-
     const monday = getMostRecentMonday();
     const mondayString = monday.toISOString().split('T')[0];
+    
+    // Display debug info
+    setDebugInfo(`weekStartDate: ${monday.toDateString()}, mondayString: ${mondayString}`);
+    setTimeout(() => setDebugInfo(''), 2000);
 
     try {
       const token = localStorage.getItem('token');
@@ -166,6 +147,7 @@ const EmployeePage: React.FC = () => {
       setError('Please fill in all required fields.');
     }
   };
+
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -245,6 +227,19 @@ const EmployeePage: React.FC = () => {
         New Time Card
       </button>
       
+      {debugInfo && (
+        <div style={{
+          backgroundColor: '#ffe6e6',
+          color: '#cc0000',
+          padding: '10px',
+          borderRadius: '4px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          {debugInfo}
+        </div>
+      )}
+
       {message && (
         <div style={{
           backgroundColor: '#e6f7ff',
@@ -352,58 +347,58 @@ const EmployeePage: React.FC = () => {
                       style={{ padding: '5px' }}
                     />
                     <button 
-                      onClick={() => addEntry(timecard._id)}
+                        onClick={() => addEntry(timecard._id)}
+                        style={{ 
+                          padding: '10px', 
+                          backgroundColor: '#4CAF50', 
+                          color: 'white', 
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Add Entry
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {!timecard.completed && (
+                  <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                    <button 
+                      onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
                       style={{ 
                         padding: '10px', 
-                        backgroundColor: '#4CAF50', 
+                        backgroundColor: '#2196F3', 
                         color: 'white', 
                         border: 'none', 
                         borderRadius: '4px', 
                         cursor: 'pointer' 
                       }}
                     >
-                      Add Entry
+                      {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
+                    </button>
+                    <button 
+                      onClick={() => deleteTimecard(timecard._id)}
+                      style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#f44336', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      Delete Time Card
                     </button>
                   </div>
-                </div>
-              )}
-              
-              {!timecard.completed && (
-                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                  <button 
-                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#2196F3', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
-                  </button>
-                  <button 
-                    onClick={() => deleteTimecard(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#f44336', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    Delete Time Card
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
-export default EmployeePage;
+  export default EmployeePage;
