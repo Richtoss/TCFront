@@ -25,7 +25,6 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
-  const [employeeName, setEmployeeName] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -44,7 +43,6 @@ const EmployeePage: React.FC = () => {
 
   useEffect(() => {
     fetchTimecards();
-    fetchEmployeeName();
   }, []);
 
   const fetchTimecards = async () => {
@@ -57,18 +55,6 @@ const EmployeePage: React.FC = () => {
     } catch (err) {
       console.error('Error fetching timecards:', err);
       setError('Failed to fetch timecards. Please try again later.');
-    }
-  };
-
-  const fetchEmployeeName = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('https://tcbackend.onrender.com/api/auth/me', {
-        headers: { 'x-auth-token': token }
-      });
-      setEmployeeName(res.data.name.split(' ')[0]); // Get the first name
-    } catch (err) {
-      console.error('Error fetching employee name:', err);
     }
   };
 
@@ -90,28 +76,22 @@ const EmployeePage: React.FC = () => {
     return new Date(today.setDate(diff));
   };
 
-  const isSameWeek = (date1: Date, date2: Date): boolean => {
-    const mondayOfDate1 = new Date(date1);
-    mondayOfDate1.setDate(mondayOfDate1.getDate() - mondayOfDate1.getDay() + 1);
-    const mondayOfDate2 = new Date(date2);
-    mondayOfDate2.setDate(mondayOfDate2.getDate() - mondayOfDate2.getDay() + 1);
-    return mondayOfDate1.getTime() === mondayOfDate2.getTime();
-  };
-
-  const hasCurrentWeekTimecard = (): boolean => {
-    const monday = getNextMonday();
-    return timecards.some(card => isSameWeek(new Date(card.weekStartDate), monday));
-  };
-
   const createNewTimecard = async () => {
-    if (hasCurrentWeekTimecard()) {
+    const monday = getNextMonday();
+    const mondayString = monday.toISOString().split('T')[0];
+
+    // Check if a timecard for this week already exists
+    const existingTimecard = timecards.find(card => {
+      const cardDate = new Date(card.weekStartDate);
+      return cardDate.getTime() === monday.getTime();
+    });
+
+    if (existingTimecard) {
       setError('A timecard for this week already exists.');
+      // Scroll to the top of the page to make the error message visible
       window.scrollTo(0, 0);
       return;
     }
-
-    const monday = getNextMonday();
-    const mondayString = monday.toISOString().split('T')[0];
 
     try {
       const token = localStorage.getItem('token');
@@ -131,6 +111,7 @@ const EmployeePage: React.FC = () => {
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
+      // Scroll to the top of the page to make the error message visible
       window.scrollTo(0, 0);
     }
   };
@@ -221,7 +202,6 @@ const EmployeePage: React.FC = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {employeeName}</h2>
       <button 
         onClick={handleLogout} 
         style={{ 
@@ -240,16 +220,15 @@ const EmployeePage: React.FC = () => {
       </button>
       <button 
         onClick={createNewTimecard} 
-        disabled={hasCurrentWeekTimecard()}
         style={{ 
           width: '100%', 
           marginBottom: '20px', 
           padding: '10px',
-          backgroundColor: hasCurrentWeekTimecard() ? '#cccccc' : '#4CAF50',
+          backgroundColor: '#4CAF50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          cursor: hasCurrentWeekTimecard() ? 'not-allowed' : 'pointer'
+          cursor: 'pointer'
         }}
       >
         New Time Card
@@ -274,7 +253,7 @@ const EmployeePage: React.FC = () => {
             onClick={() => toggleTimecard(timecard._id)} 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <h2 style={{ margin: 0 }}>{formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <h2 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
             <span>{timecard.expanded ? '▲' : '▼'}</span>
           </div>
           {timecard.expanded && (
@@ -365,7 +344,7 @@ const EmployeePage: React.FC = () => {
                 </div>
               )}
               
-              {!timecard.completed && (
+             {!timecard.completed && (
                 <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
                   <button 
                     onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
