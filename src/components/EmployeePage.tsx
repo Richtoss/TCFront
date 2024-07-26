@@ -92,9 +92,18 @@ const EmployeePage: React.FC = () => {
     const formattedDate = formatDate(monday);
     const mondayString = monday.toISOString().split('T')[0];
     
+    // Compare weekStartDate and mondayString
+    const weekStartDate = new Date(mondayString);
+    const datesMatch = weekStartDate.getTime() === monday.getTime();
+    
     // Display debug info
-    setDebugInfo(`weekStartDate: ${formattedDate}, mondayString: ${formattedDate}`);
+    setDebugInfo(`weekStartDate: ${formattedDate}, mondayString: ${formattedDate}, Match: ${datesMatch ? 'Yes' : 'No'}`);
     setTimeout(() => setDebugInfo(''), 2000);
+
+    if (!datesMatch) {
+      setError('Date mismatch detected. Please try again.');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -111,7 +120,7 @@ const EmployeePage: React.FC = () => {
       setTimecards([newCard, ...timecards]);
       setEditingCardId(newCard._id);
       setError('');
-      setMessage('');
+      setMessage('New timecard created successfully.');
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
