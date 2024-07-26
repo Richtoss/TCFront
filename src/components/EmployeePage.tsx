@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { Dayjs } from 'dayjs';
 
 interface TimecardEntry {
   id: number;
@@ -29,8 +25,6 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -75,13 +69,16 @@ const EmployeePage: React.FC = () => {
     ));
   };
 
-  const createNewTimecard = async () => {
-    if (!selectedDate) {
-      setError('Please select a start date for the timecard.');
-      return;
-    }
+  const getMostRecentMonday = (): Date => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    return new Date(today.setDate(diff));
+  };
 
-    const mondayString = selectedDate.format('YYYY-MM-DD');
+  const createNewTimecard = async () => {
+    const monday = getMostRecentMonday();
+    const mondayString = monday.toISOString().split('T')[0];
 
     try {
       const token = localStorage.getItem('token');
@@ -98,8 +95,6 @@ const EmployeePage: React.FC = () => {
       setTimecards([newCard, ...timecards]);
       setEditingCardId(newCard._id);
       setError('');
-      setShowCalendar(false);
-      setSelectedDate(null);
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
@@ -144,7 +139,7 @@ const EmployeePage: React.FC = () => {
       setError('Please fill in all required fields.');
     }
   };
-  
+
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -209,7 +204,7 @@ const EmployeePage: React.FC = () => {
         Logout
       </button>
       <button 
-        onClick={() => setShowCalendar(true)} 
+        onClick={createNewTimecard} 
         style={{ 
           width: '100%', 
           marginBottom: '20px', 
@@ -223,50 +218,6 @@ const EmployeePage: React.FC = () => {
       >
         New Time Card
       </button>
-      
-      {showCalendar && (
-        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <h3>Select the start date for your timecard:</h3>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              value={selectedDate}
-              onChange={(newValue) => setSelectedDate(newValue)}
-            />
-          </LocalizationProvider>
-          <div style={{ marginTop: '10px' }}>
-            <button 
-              onClick={createNewTimecard}
-              style={{ 
-                padding: '10px', 
-                backgroundColor: '#4CAF50', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer',
-                marginRight: '10px'
-              }}
-            >
-              Create Timecard
-            </button>
-            <button 
-              onClick={() => {
-                setShowCalendar(false);
-                setSelectedDate(null);
-              }}
-              style={{ 
-                padding: '10px', 
-                backgroundColor: '#f44336', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer' 
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
       
       {error && (
         <div style={{
