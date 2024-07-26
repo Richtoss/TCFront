@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface TimecardEntry {
   id: number;
@@ -25,6 +27,8 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -60,7 +64,7 @@ const EmployeePage: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/');
   };
 
   const toggleTimecard = (id: string) => {
@@ -69,15 +73,19 @@ const EmployeePage: React.FC = () => {
     ));
   };
 
-  const getNextMonday = (): Date => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-    return new Date(today.setDate(diff));
+  const getNextMonday = (date: Date): Date => {
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    return new Date(date.setDate(diff));
   };
 
   const createNewTimecard = async () => {
-    const monday = getNextMonday();
+    if (!selectedDate) {
+      setError('Please select a start date for the timecard.');
+      return;
+    }
+
+    const monday = getNextMonday(selectedDate);
     const mondayString = monday.toISOString().split('T')[0];
 
     // Check if a timecard for this week already exists
@@ -88,7 +96,7 @@ const EmployeePage: React.FC = () => {
 
     if (existingTimecard) {
       setError('A timecard for this week already exists.');
-      // Scroll to the top of the page to make the error message visible
+      setShowCalendar(false);
       window.scrollTo(0, 0);
       return;
     }
@@ -108,10 +116,11 @@ const EmployeePage: React.FC = () => {
       setTimecards([newCard, ...timecards]);
       setEditingCardId(newCard._id);
       setError('');
+      setShowCalendar(false);
+      setSelectedDate(null);
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
-      // Scroll to the top of the page to make the error message visible
       window.scrollTo(0, 0);
     }
   };
@@ -199,6 +208,7 @@ const EmployeePage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
+  // The JSX part of the component will be continued in the next response
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
@@ -219,7 +229,7 @@ const EmployeePage: React.FC = () => {
         Logout
       </button>
       <button 
-        onClick={createNewTimecard} 
+        onClick={() => setShowCalendar(true)} 
         style={{ 
           width: '100%', 
           marginBottom: '20px', 
@@ -233,6 +243,50 @@ const EmployeePage: React.FC = () => {
       >
         New Time Card
       </button>
+      
+      {showCalendar && (
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <h3>Select the Monday to start your timecard:</h3>
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date: Date) => setSelectedDate(date)}
+            filterDate={(date: Date) => date.getDay() === 1} // Only allow Mondays
+            inline
+          />
+          <div style={{ marginTop: '10px' }}>
+            <button 
+              onClick={createNewTimecard}
+              style={{ 
+                padding: '10px', 
+                backgroundColor: '#4CAF50', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '4px', 
+                cursor: 'pointer',
+                marginRight: '10px'
+              }}
+            >
+              Create Timecard
+            </button>
+            <button 
+              onClick={() => {
+                setShowCalendar(false);
+                setSelectedDate(null);
+              }}
+              style={{ 
+                padding: '10px', 
+                backgroundColor: '#f44336', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '4px', 
+                cursor: 'pointer' 
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       
       {error && (
         <div style={{
@@ -344,7 +398,7 @@ const EmployeePage: React.FC = () => {
                 </div>
               )}
               
-             {!timecard.completed && (
+              {!timecard.completed && (
                 <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
                   <button 
                     onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
