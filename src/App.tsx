@@ -4,7 +4,7 @@ import LoginPage from './components/LoginPage';
 import EmployeePage from './components/EmployeePage';
 import ManagerPage from './components/ManagerPage';
 import PrivateRoute from './components/PrivateRoute';
-import 'react-datepicker/dist/react-datepicker.css';
+
 
 const App: React.FC = () => {
   return (
