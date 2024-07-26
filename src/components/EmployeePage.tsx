@@ -26,7 +26,6 @@ const EmployeePage: React.FC = () => {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [message, setMessage] = useState<string>('');
-  const [debugInfo, setDebugInfo] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -90,10 +89,6 @@ const EmployeePage: React.FC = () => {
   const createNewTimecard = async () => {
     const monday = getCurrentWeekMonday();
     const mondayString = monday.toISOString().split('T')[0];
-    
-    // Display debug info
-    setDebugInfo(`Creating timecard for week starting: ${formatDate(monday)}`);
-    setTimeout(() => setDebugInfo(''), 2000);
 
     try {
       const token = localStorage.getItem('token');
@@ -230,19 +225,6 @@ const EmployeePage: React.FC = () => {
         New Time Card
       </button>
       
-      {debugInfo && (
-        <div style={{
-          backgroundColor: '#e6f7ff',
-          color: '#0066cc',
-          padding: '10px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}>
-          {debugInfo}
-        </div>
-      )}
-
       {message && (
         <div style={{
           backgroundColor: '#e6f7ff',
