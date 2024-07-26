@@ -102,15 +102,12 @@ const EmployeePage: React.FC = () => {
     return monday;
   };
 
+  // Continued in Part 2...
+  // ...continued from Part 1
+
   const createNewTimecard = async () => {
     const monday = getCurrentWeekMonday();
     const mondayString = monday.toISOString().split('T')[0];
-
-    const existingTimecard = timecards.find(card => card.weekStartDate === mondayString);
-    if (existingTimecard) {
-      setError('A timecard for the current week already exists.');
-      return;
-    }
 
     try {
       const token = localStorage.getItem('token');
@@ -225,77 +222,198 @@ const EmployeePage: React.FC = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <h1 className="text-center">Employee Page</h1>
-      {employee && <h2>Welcome, {employee.firstName}!</h2>}
-      <button className="btn btn-primary" onClick={createNewTimecard}>Create New Timecard</button>
-      <button className="btn btn-secondary ml-2" onClick={handleLogout}>Logout</button>
-      {error && <div className="alert alert-danger mt-3">{error}</div>}
-      {timecards.length > 0 ? (
-        <div className="mt-4">
-          {timecards.map(card => (
-            <div key={card._id} className="card mb-3">
-              <div className="card-header">
-                <h5 className="mb-0">
-                  {`Week of ${formatDate(card.weekStartDate)}`}
-                  <button className="btn btn-link" onClick={() => toggleTimecard(card._id)}>
-                    {card.expanded ? 'Collapse' : 'Expand'}
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
+      {employee && <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {employee.firstName}!</h2>}
+      <button 
+        onClick={handleLogout} 
+        style={{ 
+          position: 'absolute', 
+          top: '20px', 
+          right: '20px',
+          padding: '10px',
+          backgroundColor: '#f44336',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        Logout
+      </button>
+      <button 
+        onClick={createNewTimecard} 
+        style={{ 
+          width: '100%', 
+          marginBottom: '20px', 
+          padding: '10px',
+          backgroundColor: '#4CAF50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        New Time Card
+      </button>
+      
+      {error && (
+        <div style={{
+          backgroundColor: '#ffcccc',
+          color: '#cc0000',
+          padding: '10px',
+          borderRadius: '4px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          {error}
+        </div>
+      )}
+
+      {timecards.map(timecard => (
+        <div key={timecard._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
+          <div 
+            onClick={() => toggleTimecard(timecard._id)} 
+            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <h2 style={{ margin: 0 }}>{formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <span>{timecard.expanded ? '▲' : '▼'}</span>
+          </div>
+          {timecard.expanded && (
+            <div style={{ marginTop: '10px' }}>
+              {timecard.entries.map((entry) => (
+                <div key={entry.id} style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ margin: '0 0 5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
+                    <p style={{ margin: 0, fontSize: '0.9em', color: '#666' }}>{entry.description}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: 0 }}>{calculateHours(entry.startTime, entry.endTime).toFixed(2)} hours</p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '0.9em', color: '#666' }}>{entry.startTime} - {entry.endTime}</p>
+                    {!timecard.completed && (
+                      <button 
+                        onClick={() => deleteEntry(timecard._id, entry.id)} 
+                        style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', marginTop: '5px' }}
+                      >
+                        Delete Entry
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {!timecard.completed && editingCardId === timecard._id && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Add New Entry</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <select 
+                      value={newEntry.day} 
+                      onChange={(e) => setNewEntry({...newEntry, day: e.target.value})}
+                      style={{ padding: '5px' }}
+                    >
+                      <option value="">Select day</option>
+                      {daysOfWeek.map(day => (
+                        <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Job Name"
+                      value={newEntry.jobName}
+                      onChange={(e) => setNewEntry({...newEntry, jobName: e.target.value})}
+                      style={{ padding: '5px' }}
+                    />
+                    <select
+                      value={newEntry.startTime}
+                      onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value, endTime: ''})}
+                      style={{ padding: '5px' }}
+                    >
+                      <option value="">Select start time</option>
+                      {startTimeOptions.map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={newEntry.endTime}
+                      onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+                      style={{ padding: '5px' }}
+                    >
+                      <option value="">Select end time</option>
+                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={newEntry.description}
+                      onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
+                      style={{ padding: '5px' }}
+                    />
+                    <button 
+                      onClick={() => addEntry(timecard._id)}
+                      style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#4CAF50', 
+                        color: 'white', 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Add Entry
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {!timecard.completed && (
+                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                  <button 
+                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#2196F3', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
                   </button>
-                </h5>
-              </div>
-              {card.expanded && (
-                <div className="card-body">
-                  {card.entries.map(entry => (
-                    <div key={entry.id} className="mb-3">
-                      <div><strong>Day:</strong> {entry.day}</div>
-                      <div><strong>Job Name:</strong> {entry.jobName}</div>
-                      <div><strong>Start Time:</strong> {entry.startTime}</div>
-                      <div><strong>End Time:</strong> {entry.endTime}</div>
-                      <div><strong>Description:</strong> {entry.description}</div>
-                      <button className="btn btn-danger mt-2" onClick={() => deleteEntry(card._id, entry.id)}>Delete Entry</button>
-                    </div>
-                  ))}
-                  <h5 className="mt-4">Add New Entry</h5>
-                  <div className="form-group">
-                    <label>Day:</label>
-                    <select className="form-control" value={newEntry.day} onChange={e => setNewEntry({ ...newEntry, day: e.target.value })}>
-                      <option value="">Select Day</option>
-                      {daysOfWeek.map(day => <option key={day} value={day}>{day}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Job Name:</label>
-                    <input className="form-control" type="text" value={newEntry.jobName} onChange={e => setNewEntry({ ...newEntry, jobName: e.target.value })} />
-                  </div>
-                  <div className="form-group">
-                    <label>Start Time:</label>
-                    <select className="form-control" value={newEntry.startTime} onChange={e => setNewEntry({ ...newEntry, startTime: e.target.value })}>
-                      <option value="">Select Start Time</option>
-                      {startTimeOptions.map(time => <option key={time} value={time}>{time}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>End Time:</label>
-                    <select className="form-control" value={newEntry.endTime} onChange={e => setNewEntry({ ...newEntry, endTime: e.target.value })}>
-                      <option value="">Select End Time</option>
-                      {allEndTimeOptions.map(time => <option key={time} value={time}>{time}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Description:</label>
-                    <textarea className="form-control" value={newEntry.description} onChange={e => setNewEntry({ ...newEntry, description: e.target.value })}></textarea>
-                  </div>
-                  <button className="btn btn-success mt-3" onClick={() => addEntry(card._id)}>Add Entry</button>
-                  <button className="btn btn-warning mt-3 ml-2" onClick={() => markTimecardComplete(card._id)} disabled={card.completed}>Mark as Complete</button>
-                  <button className="btn btn-danger mt-3 ml-2" onClick={() => deleteTimecard(card._id)}>Delete Timecard</button>
+                  <button 
+                    onClick={() => deleteTimecard(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#f44336', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Delete Time Card
+                  </button>
+                  <button 
+                    onClick={() => markTimecardComplete(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#FFA500', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Mark Complete
+                  </button>
                 </div>
               )}
             </div>
-          ))}
+          )}
         </div>
-      ) : (
-        <p className="mt-3">No timecards available. Create a new timecard to get started.</p>
-      )}
+      ))}
     </div>
   );
 };
