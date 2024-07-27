@@ -43,10 +43,7 @@ const ManagerPage: React.FC = () => {
       const res = await axios.get<Employee[]>('https://tcbackend.onrender.com/api/timecard/all', {
         headers: { 'x-auth-token': token }
       });
-      setEmployees(res.data.map(employee => ({
-        ...employee,
-        timecards: employee.timecards.slice(-3) // Only keep the last 3 timecards
-      })));
+      setEmployees(res.data);
     } catch (err) {
       console.error('Error fetching employee data:', err);
       setError('Failed to fetch employee data. Please try again later.');
