@@ -84,6 +84,20 @@ const EmployeePage: React.FC = () => {
       navigate('/');
     }
   };
+  
+  const fetchUserDataFromServer = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('https://tcbackend.onrender.com/api/auth/me', {
+        headers: { 'x-auth-token': token }
+      });
+      setName(response.data.name);
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setError('Failed to fetch user data. Please try logging in again.');
+      navigate('/');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
