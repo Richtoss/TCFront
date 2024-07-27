@@ -318,19 +318,6 @@ const EmployeePage: React.FC = () => {
         {checkingTimecard ? 'Checking...' : 'New Time Card'}
       </button>
       
-      {error && (
-        <div style={{
-          backgroundColor: '#ffcccc',
-          color: '#cc0000',
-          padding: '10px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}>
-          {error}
-        </div>
-      )}
-
       {timecards.map(timecard => (
         <div key={timecard._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
           <div 
@@ -357,7 +344,7 @@ const EmployeePage: React.FC = () => {
                         style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', marginTop: '5px' }}
                       >
                         Delete Entry
-				  </button>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -478,5 +465,5 @@ const EmployeePage: React.FC = () => {
     </div>
   );
 };
-//test
+
 export default EmployeePage;
