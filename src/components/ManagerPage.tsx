@@ -24,11 +24,11 @@ interface Employee {
   name: string;
   email: string;
   timecards: Timecard[];
+  isExpanded?: boolean;
 }
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
   const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
@@ -45,7 +45,8 @@ const ManagerPage: React.FC = () => {
       });
       setEmployees(res.data.map(employee => ({
         ...employee,
-        timecards: employee.timecards.slice(-3) // Keep only the last 3 timecards
+        timecards: employee.timecards.slice(-3), // Keep only the last 3 timecards
+        isExpanded: false
       })));
     } catch (err) {
       console.error('Error fetching employee data:', err);
@@ -59,9 +60,11 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployee = (employeeId: string) => {
-    setExpandedEmployeeId(prevId => prevId === employeeId ? null : employeeId);
-    // Reset expanded timecards when toggling employee
-    setExpandedTimecards({});
+    setEmployees(prevEmployees =>
+      prevEmployees.map(emp =>
+        emp._id === employeeId ? { ...emp, isExpanded: !emp.isExpanded } : emp
+      )
+    );
   };
 
   const toggleTimecard = (timecardId: string) => {
@@ -100,21 +103,31 @@ const ManagerPage: React.FC = () => {
 
       {employees.map(employee => (
         <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
-          <div 
-            onClick={() => toggleEmployee(employee._id)} 
-            style={{ 
-              cursor: 'pointer', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              backgroundColor: '#f0f0f0',
-              padding: '15px',
-            }}
-          >
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            backgroundColor: '#f0f0f0',
+            padding: '15px',
+          }}>
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
-            <span>{expandedEmployeeId === employee._id ? '▲' : '▼'}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleEmployee(employee._id);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '20px',
+                padding: '5px 10px',
+              }}
+            >
+              {employee.isExpanded ? '▲' : '▼'}
+            </button>
           </div>
-          {expandedEmployeeId === employee._id && (
+          {employee.isExpanded && (
             <div style={{ padding: '15px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
