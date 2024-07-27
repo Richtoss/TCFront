@@ -60,6 +60,8 @@ const ManagerPage: React.FC = () => {
 
   const toggleEmployee = (employeeId: string) => {
     setExpandedEmployeeId(prevId => prevId === employeeId ? null : employeeId);
+    // Reset expanded timecards when toggling employee
+    setExpandedTimecards({});
   };
 
   const toggleTimecard = (timecardId: string) => {
