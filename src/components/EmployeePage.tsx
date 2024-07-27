@@ -22,8 +22,11 @@ interface Timecard {
 }
 
 interface DecodedToken {
-  firstName: string;
-  // Add other properties from your token as needed
+  user: {
+    id: string;
+    name: string;
+    isManager: boolean;
+  };
 }
 
 const EmployeePage: React.FC = () => {
@@ -31,20 +34,10 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
-  const [firstName, setFirstName] = useState<string>('');
+  const [name, setName] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const generateTimeOptions = (start: number, end: number): string[] => {
-    const options: string[] = [];
-    for (let i = start; i <= end; i++) {
-      ['00', '15', '30', '45'].forEach(minutes => {
-        options.push(`${i.toString().padStart(2, '0')}:${minutes}`);
-      });
-    }
-    return options;
-  };
-
   const startTimeOptions = generateTimeOptions(4, 20); // 4 AM to 8 PM
   const allEndTimeOptions = generateTimeOptions(4, 21); // 4 AM to 9 PM
 
@@ -52,6 +45,16 @@ const EmployeePage: React.FC = () => {
     fetchTimecards();
     fetchUserData();
   }, []);
+
+  function generateTimeOptions(start: number, end: number): string[] {
+    const options: string[] = [];
+    for (let i = start; i <= end; i++) {
+      ['00', '15', '30', '45'].forEach(minutes => {
+        options.push(`${i.toString().padStart(2, '0')}:${minutes}`);
+      });
+    }
+    return options;
+  }
 
   const fetchTimecards = async () => {
     try {
@@ -71,7 +74,7 @@ const EmployeePage: React.FC = () => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token) as DecodedToken;
-        setFirstName(decodedToken.firstName);
+        setName(decodedToken.user.name);
       } catch (error) {
         console.error('Error decoding token:', error);
         setError('Failed to get user data. Please try logging in again.');
@@ -85,26 +88,6 @@ const EmployeePage: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
-  };
-
-  const toggleTimecard = (id: string) => {
-    setTimecards(timecards.map(card => 
-      card._id === id ? { ...card, expanded: !card.expanded } : card
-    ));
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-  };
-
-  const getCurrentWeekMonday = (): Date => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(today.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
-    return monday;
   };
 
   const createNewTimecard = async () => {
@@ -132,11 +115,19 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  const calculateHours = (startTime: string, endTime: string): number => {
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-    const diff = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
-    return diff / 60;
+  const getCurrentWeekMonday = (): Date => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  };
+
+  const toggleTimecard = (id: string) => {
+    setTimecards(timecards.map(card => 
+      card._id === id ? { ...card, expanded: !card.expanded } : card
+    ));
   };
 
   const addEntry = async (cardId: string) => {
@@ -150,9 +141,7 @@ const EmployeePage: React.FC = () => {
         }
         const newEntryWithId = { ...newEntry, id: Date.now() };
         const updatedEntries = [...timecard.entries, newEntryWithId];
-        const newTotalHours = updatedEntries.reduce((total, entry) => 
-          total + calculateHours(entry.startTime, entry.endTime), 0
-        );
+        const newTotalHours = calculateTotalHours(updatedEntries);
         const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
           entries: updatedEntries,
           totalHours: newTotalHours
@@ -171,6 +160,15 @@ const EmployeePage: React.FC = () => {
     }
   };
 
+  const calculateTotalHours = (entries: TimecardEntry[]): number => {
+    return entries.reduce((total, entry) => {
+      const [startHour, startMinute] = entry.startTime.split(':').map(Number);
+      const [endHour, endMinute] = entry.endTime.split(':').map(Number);
+      const diff = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+      return total + diff / 60;
+    }, 0);
+  };
+
   const deleteEntry = async (cardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -180,9 +178,7 @@ const EmployeePage: React.FC = () => {
         return;
       }
       const updatedEntries = timecard.entries.filter(entry => entry.id !== entryId);
-      const newTotalHours = updatedEntries.reduce((total, entry) => 
-        total + calculateHours(entry.startTime, entry.endTime), 0
-      );
+      const newTotalHours = calculateTotalHours(updatedEntries);
       const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
         entries: updatedEntries,
         totalHours: newTotalHours
@@ -223,10 +219,20 @@ const EmployeePage: React.FC = () => {
     }
   };
 
- return (
+  return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
-      {firstName && <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {firstName}!</h2>}
+      <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>Employee Dashboard</h1>
+      {name && (
+        <h2 style={{ 
+          textAlign: 'center', 
+          marginBottom: '20px',
+          fontSize: '1.2em',
+          fontWeight: 'normal',
+          color: '#4a4a4a'
+        }}>
+          Welcome, {name}!
+        </h2>
+      )}
       <button 
         onClick={handleLogout} 
         style={{ 
@@ -278,7 +284,7 @@ const EmployeePage: React.FC = () => {
             onClick={() => toggleTimecard(timecard._id)} 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <h2 style={{ margin: 0 }}>{formatDate(timecard.weekStartDate)} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <h2 style={{ margin: 0 }}>{new Date(timecard.weekStartDate).toLocaleDateString()} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
             <span>{timecard.expanded ? '▲' : '▼'}</span>
           </div>
           {timecard.expanded && (
@@ -290,7 +296,7 @@ const EmployeePage: React.FC = () => {
                     <p style={{ margin: 0, fontSize: '0.9em', color: '#666' }}>{entry.description}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: 0 }}>{calculateHours(entry.startTime, entry.endTime).toFixed(2)} hours</p>
+                    <p style={{ margin: 0 }}>{((new Date(`2000-01-01T${entry.endTime}:00`) - new Date(`2000-01-01T${entry.startTime}:00`)) / 3600000).toFixed(2)} hours</p>
                     <p style={{ margin: '5px 0 0 0', fontSize: '0.9em', color: '#666' }}>{entry.startTime} - {entry.endTime}</p>
                     {!timecard.completed && (
                       <button 
@@ -342,7 +348,7 @@ const EmployeePage: React.FC = () => {
                     >
                       <option value="">Select end time</option>
                       {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
-                        <option key={time} value={time}>{time}</option>
+					  <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
                     <input
