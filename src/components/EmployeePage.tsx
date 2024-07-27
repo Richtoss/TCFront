@@ -161,12 +161,15 @@ const EmployeePage: React.FC = () => {
   };
 
   const calculateTotalHours = (entries: TimecardEntry[]): number => {
-    return entries.reduce((total, entry) => {
-      const [startHour, startMinute] = entry.startTime.split(':').map(Number);
-      const [endHour, endMinute] = entry.endTime.split(':').map(Number);
-      const diff = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
-      return total + diff / 60;
-    }, 0);
+    return entries.reduce((total, entry) => total + calculateHoursDifference(entry.startTime, entry.endTime), 0);
+  };
+
+  const calculateHoursDifference = (startTime: string, endTime: string): number => {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    return (endMinutes - startMinutes) / 60;
   };
 
   const deleteEntry = async (cardId: string, entryId: number) => {
@@ -296,7 +299,7 @@ const EmployeePage: React.FC = () => {
                     <p style={{ margin: 0, fontSize: '0.9em', color: '#666' }}>{entry.description}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: 0 }}>{((new Date(`2000-01-01T${entry.endTime}:00`) - new Date(`2000-01-01T${entry.startTime}:00`)) / 3600000).toFixed(2)} hours</p>
+                    <p style={{ margin: 0 }}>{calculateHoursDifference(entry.startTime, entry.endTime).toFixed(2)} hours</p>
                     <p style={{ margin: '5px 0 0 0', fontSize: '0.9em', color: '#666' }}>{entry.startTime} - {entry.endTime}</p>
                     {!timecard.completed && (
                       <button 
@@ -347,83 +350,83 @@ const EmployeePage: React.FC = () => {
                       style={{ padding: '5px' }}
                     >
                       <option value="">Select end time</option>
-                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
-					  <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      value={newEntry.description}
-                      onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
-                      style={{ padding: '5px' }}
-                    />
-                    <button 
-                      onClick={() => addEntry(timecard._id)}
-                      style={{ 
-                        padding: '10px', 
-                        backgroundColor: '#4CAF50', 
-                        color: 'white', 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Add Entry
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {!timecard.completed && (
-                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                    {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={newEntry.description}
+                    onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
+                    style={{ padding: '5px' }}
+                  />
                   <button 
-                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                    onClick={() => addEntry(timecard._id)}
                     style={{ 
                       padding: '10px', 
-                      backgroundColor: '#2196F3', 
+                      backgroundColor: '#4CAF50', 
                       color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
                     }}
                   >
-                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
-                  </button>
-                  <button 
-                    onClick={() => deleteTimecard(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#f44336', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    Delete Time Card
-                  </button>
-                  <button 
-                    onClick={() => markTimecardComplete(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#FFA500', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    Mark Complete
+                    Add Entry
                   </button>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
+              </div>
+            )}
+            
+            {!timecard.completed && (
+              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                <button 
+                  onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                  style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#2196F3', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
+                </button>
+                <button 
+                  onClick={() => deleteTimecard(timecard._id)}
+                  style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#f44336', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  Delete Time Card
+                </button>
+                <button 
+                  onClick={() => markTimecardComplete(timecard._id)}
+                  style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#FFA500', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  Mark Complete
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+);
 };
 
 export default EmployeePage;
