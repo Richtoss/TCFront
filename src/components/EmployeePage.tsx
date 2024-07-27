@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
 
 interface TimecardEntry {
   id: number;
@@ -20,8 +21,9 @@ interface Timecard {
   expanded?: boolean;
 }
 
-interface Employee {
+interface DecodedToken {
   firstName: string;
+  // Add other properties from your token as needed
 }
 
 const EmployeePage: React.FC = () => {
@@ -29,7 +31,7 @@ const EmployeePage: React.FC = () => {
   const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [firstName, setFirstName] = useState<string>('');
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -48,7 +50,7 @@ const EmployeePage: React.FC = () => {
 
   useEffect(() => {
     fetchTimecards();
-    fetchEmployeeData();
+    fetchUserData();
   }, []);
 
   const fetchTimecards = async () => {
@@ -64,16 +66,19 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  const fetchEmployeeData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get<Employee>('https://tcbackend.onrender.com/api/employee', {
-        headers: { 'x-auth-token': token }
-      });
-      setEmployee(res.data);
-    } catch (err) {
-      console.error('Error fetching employee data:', err);
-      setError('Failed to fetch employee data. Please try again later.');
+  const fetchUserData = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decodedToken = jwt_decode(token) as DecodedToken;
+        setFirstName(decodedToken.firstName);
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setError('Failed to get user data. Please try logging in again.');
+      }
+    } else {
+      setError('No authentication token found. Please log in again.');
+      navigate('/');
     }
   };
 
@@ -101,9 +106,6 @@ const EmployeePage: React.FC = () => {
     monday.setHours(0, 0, 0, 0);
     return monday;
   };
-
-  // Continued in Part 2...
-  // ...continued from Part 1
 
   const createNewTimecard = async () => {
     const monday = getCurrentWeekMonday();
@@ -224,7 +226,7 @@ const EmployeePage: React.FC = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
-      {employee && <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {employee.firstName}!</h2>}
+      {firstName && <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {firstName}!</h2>}
       <button 
         onClick={handleLogout} 
         style={{ 
