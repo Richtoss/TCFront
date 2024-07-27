@@ -252,10 +252,17 @@ const EmployeePage: React.FC = () => {
   const markTimecardComplete = async (cardId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}/complete`, {}, {
-        headers: { 'x-auth-token': token }
-      });
-      setTimecards(timecards.map(card => card._id === cardId ? { ...res.data, expanded: true } : card));
+      const res = await axios.put<Timecard>(
+        `https://tcbackend.onrender.com/api/timecard/${cardId}/complete`,
+        {},
+        {
+          headers: { 'x-auth-token': token }
+        }
+      );
+      setTimecards(timecards.map(card => 
+        card._id === cardId ? { ...res.data, expanded: true } : card
+      ));
+      setError('');
     } catch (err) {
       console.error('Error marking timecard as complete:', err);
       setError('Failed to mark timecard as complete. Please try again.');
@@ -324,7 +331,10 @@ const EmployeePage: React.FC = () => {
             onClick={() => toggleTimecard(timecard._id)} 
             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <h2 style={{ margin: 0 }}>{new Date(timecard.weekStartDate).toLocaleDateString()} | Total Hours: {timecard.totalHours.toFixed(2)}</h2>
+            <h2 style={{ margin: 0 }}>
+              {new Date(timecard.weekStartDate).toLocaleDateString()} | Total Hours: {timecard.totalHours.toFixed(2)}
+              {timecard.completed && <span style={{ color: 'green', marginLeft: '10px' }}>(Completed)</span>}
+            </h2>
             <span>{timecard.expanded ? '▲' : '▼'}</span>
           </div>
           {timecard.expanded && (
@@ -467,3 +477,7 @@ const EmployeePage: React.FC = () => {
 };
 
 export default EmployeePage;
+
+
+
+
