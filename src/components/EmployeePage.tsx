@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import jwt_decode from 'jwt-decode';
+import jwtDecode from 'jwt-decode';
 
 interface TimecardEntry {
   id: number;
@@ -70,7 +70,7 @@ const EmployeePage: React.FC = () => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const decodedToken = jwt_decode(token) as DecodedToken;
+        const decodedToken = jwtDecode(token) as DecodedToken; // Changed from jwt_decode to jwtDecode
         setFirstName(decodedToken.firstName);
       } catch (error) {
         console.error('Error decoding token:', error);
