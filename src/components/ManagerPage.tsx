@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,19 +58,19 @@ const ManagerPage: React.FC = () => {
     navigate('/login');
   };
 
-  const toggleEmployee = (employeeId: string) => {
-    setExpandedEmployees(prev => ({
-      ...prev,
-      [employeeId]: !prev[employeeId]
+  const toggleEmployee = useCallback((employeeId: string) => {
+    setExpandedEmployees(prevState => ({
+      ...prevState,
+      [employeeId]: !prevState[employeeId]
     }));
-  };
+  }, []);
 
-  const toggleTimecard = (timecardId: string) => {
-    setExpandedTimecards(prev => ({
-      ...prev,
-      [timecardId]: !prev[timecardId]
+  const toggleTimecard = useCallback((timecardId: string) => {
+    setExpandedTimecards(prevState => ({
+      ...prevState,
+      [timecardId]: !prevState[timecardId]
     }));
-  };
+  }, []);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
