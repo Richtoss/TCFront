@@ -24,11 +24,11 @@ interface Employee {
   name: string;
   email: string;
   timecards: Timecard[];
-  isExpanded?: boolean;
 }
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [expandedEmployees, setExpandedEmployees] = useState<Record<string, boolean>>({});
   const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
@@ -45,8 +45,7 @@ const ManagerPage: React.FC = () => {
       });
       setEmployees(res.data.map(employee => ({
         ...employee,
-        timecards: employee.timecards.slice(-3), // Keep only the last 3 timecards
-        isExpanded: false
+        timecards: employee.timecards.slice(-3) // Keep only the last 3 timecards
       })));
     } catch (err) {
       console.error('Error fetching employee data:', err);
@@ -60,11 +59,10 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployee = (employeeId: string) => {
-    setEmployees(prevEmployees =>
-      prevEmployees.map(emp =>
-        emp._id === employeeId ? { ...emp, isExpanded: !emp.isExpanded } : emp
-      )
-    );
+    setExpandedEmployees(prev => ({
+      ...prev,
+      [employeeId]: !prev[employeeId]
+    }));
   };
 
   const toggleTimecard = (timecardId: string) => {
@@ -112,10 +110,7 @@ const ManagerPage: React.FC = () => {
           }}>
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleEmployee(employee._id);
-              }}
+              onClick={() => toggleEmployee(employee._id)}
               style={{
                 background: 'none',
                 border: 'none',
@@ -124,10 +119,10 @@ const ManagerPage: React.FC = () => {
                 padding: '5px 10px',
               }}
             >
-              {employee.isExpanded ? '▲' : '▼'}
+              {expandedEmployees[employee._id] ? '▲' : '▼'}
             </button>
           </div>
-          {employee.isExpanded && (
+          {expandedEmployees[employee._id] && (
             <div style={{ padding: '15px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
