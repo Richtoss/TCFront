@@ -28,7 +28,7 @@ interface Employee {
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
+  const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
   const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployee = (employeeId: string) => {
-    setExpandedEmployee(prev => prev === employeeId ? null : employeeId);
+    setExpandedEmployeeId(prevId => prevId === employeeId ? null : employeeId);
   };
 
   const toggleTimecard = (timecardId: string) => {
@@ -97,7 +97,7 @@ const ManagerPage: React.FC = () => {
       {error && <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>}
 
       {employees.map(employee => (
-        <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
+        <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
           <div 
             onClick={() => toggleEmployee(employee._id)} 
             style={{ 
@@ -106,15 +106,14 @@ const ManagerPage: React.FC = () => {
               justifyContent: 'space-between', 
               alignItems: 'center',
               backgroundColor: '#f0f0f0',
-              padding: '10px',
-              borderRadius: '4px'
+              padding: '15px',
             }}
           >
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
-            <span>{expandedEmployee === employee._id ? '▲' : '▼'}</span>
+            <span>{expandedEmployeeId === employee._id ? '▲' : '▼'}</span>
           </div>
-          {expandedEmployee === employee._id && (
-            <div style={{ marginTop: '10px' }}>
+          {expandedEmployeeId === employee._id && (
+            <div style={{ padding: '15px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
                   <div 
