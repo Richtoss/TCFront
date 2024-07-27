@@ -24,9 +24,16 @@ interface Timecard {
 interface DecodedToken {
   user: {
     id: string;
-    name: string;
     isManager: boolean;
   };
+  iat: number;
+  exp: number;
+}
+
+interface UserData {
+  name: string;
+  email: string;
+  // Add other user properties as needed
 }
 
 const EmployeePage: React.FC = () => {
@@ -35,6 +42,7 @@ const EmployeePage: React.FC = () => {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [name, setName] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -42,8 +50,8 @@ const EmployeePage: React.FC = () => {
   const allEndTimeOptions = generateTimeOptions(4, 21); // 4 AM to 9 PM
 
   useEffect(() => {
-    fetchTimecards();
     fetchUserData();
+    fetchTimecards();
   }, []);
 
   function generateTimeOptions(start: number, end: number): string[] {
@@ -56,6 +64,40 @@ const EmployeePage: React.FC = () => {
     return options;
   }
 
+  const fetchUserData = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token) as DecodedToken;
+        // Token is valid, now fetch user data
+        await fetchUserDataFromServer();
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setError('Failed to get user data. Please try logging in again.');
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setError('No authentication token found. Please log in again.');
+      navigate('/');
+    }
+  };
+
+  const fetchUserDataFromServer = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get<UserData>('https://tcbackend.onrender.com/api/auth/me', {
+        headers: { 'x-auth-token': token }
+      });
+      setName(response.data.name);
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setError('Failed to fetch user data. Please try logging in again.');
+      navigate('/');
+    }
+  };
+
   const fetchTimecards = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -66,36 +108,6 @@ const EmployeePage: React.FC = () => {
     } catch (err) {
       console.error('Error fetching timecards:', err);
       setError('Failed to fetch timecards. Please try again later.');
-    }
-  };
-
-  const fetchUserData = () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decodedToken = jwtDecode(token) as DecodedToken;
-        setName(decodedToken.user.name);
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        setError('Failed to get user data. Please try logging in again.');
-      }
-    } else {
-      setError('No authentication token found. Please log in again.');
-      navigate('/');
-    }
-  };
-  
-  const fetchUserDataFromServer = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('https://tcbackend.onrender.com/api/auth/me', {
-        headers: { 'x-auth-token': token }
-      });
-      setName(response.data.name);
-    } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError('Failed to fetch user data. Please try logging in again.');
-      navigate('/');
     }
   };
 
@@ -236,6 +248,10 @@ const EmployeePage: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>Employee Dashboard</h1>
@@ -364,83 +380,83 @@ const EmployeePage: React.FC = () => {
                       style={{ padding: '5px' }}
                     >
                       <option value="">Select end time</option>
-                    {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={newEntry.description}
-                    onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
-                    style={{ padding: '5px' }}
-                  />
+                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={newEntry.description}
+                      onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
+                      style={{ padding: '5px' }}
+                    />
+                    <button 
+                      onClick={() => addEntry(timecard._id)}
+                      style={{ 
+                        padding: '10px', 
+                        backgroundColor: '#4CAF50', 
+                        color: 'white', 
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Add Entry
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {!timecard.completed && (
+                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
                   <button 
-                    onClick={() => addEntry(timecard._id)}
+                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
                     style={{ 
                       padding: '10px', 
-                      backgroundColor: '#4CAF50', 
+                      backgroundColor: '#2196F3', 
                       color: 'white', 
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
                     }}
                   >
-                    Add Entry
+                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
+                  </button>
+                  <button 
+                    onClick={() => deleteTimecard(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#f44336', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Delete Time Card
+                  </button>
+                  <button 
+                    onClick={() => markTimecardComplete(timecard._id)}
+                    style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#FFA500', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Mark Complete
                   </button>
                 </div>
-              </div>
-            )}
-            
-            {!timecard.completed && (
-              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                <button 
-                  onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
-                  style={{ 
-                    padding: '10px', 
-                    backgroundColor: '#2196F3', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
-                </button>
-                <button 
-                  onClick={() => deleteTimecard(timecard._id)}
-                  style={{ 
-                    padding: '10px', 
-                    backgroundColor: '#f44336', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  Delete Time Card
-                </button>
-                <button 
-                  onClick={() => markTimecardComplete(timecard._id)}
-                  style={{ 
-                    padding: '10px', 
-                    backgroundColor: '#FFA500', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer' 
-                  }}
-                >
-                  Mark Complete
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    ))}
-  </div>
-);
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default EmployeePage;
