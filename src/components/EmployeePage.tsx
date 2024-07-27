@@ -116,35 +116,24 @@ const EmployeePage: React.FC = () => {
     navigate('/');
   };
 
-  const checkExistingTimecard = async () => {
+  const createNewTimecard = async () => {
     setCheckingTimecard(true);
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get<{ exists: boolean }>('https://tcbackend.onrender.com/api/timecard/check-current-week', {
         headers: { 'x-auth-token': token }
       });
-      setTimecardExists(res.data.exists);
-    } catch (err) {
-      console.error('Error checking existing timecard:', err);
-      setError('Failed to check for existing timecard. Please try again.');
-    } finally {
-      setCheckingTimecard(false);
-    }
-  };
+      
+      if (res.data.exists) {
+        setTimecardExists(true);
+        setError('A timecard for the current week already exists.');
+        return;
+      }
 
-  const createNewTimecard = async () => {
-    await checkExistingTimecard();
-    if (timecardExists) {
-      setError('A timecard for the current week already exists.');
-      return;
-    }
+      const monday = getCurrentWeekMonday();
+      const mondayString = monday.toISOString().split('T')[0];
 
-    const monday = getCurrentWeekMonday();
-    const mondayString = monday.toISOString().split('T')[0];
-
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post<Timecard>('https://tcbackend.onrender.com/api/timecard', {
+      const newCardRes = await axios.post<Timecard>('https://tcbackend.onrender.com/api/timecard', {
         weekStartDate: mondayString,
         entries: [],
         totalHours: 0,
@@ -153,13 +142,16 @@ const EmployeePage: React.FC = () => {
         headers: { 'x-auth-token': token }
       });
 
-      const newCard = { ...res.data, expanded: true };
+      const newCard = { ...newCardRes.data, expanded: true };
       setTimecards([newCard, ...timecards]);
       setEditingCardId(newCard._id);
       setError('');
+      setTimecardExists(false);
     } catch (err) {
       console.error('Error creating new timecard:', err);
       setError('Failed to create new timecard. Please try again.');
+    } finally {
+      setCheckingTimecard(false);
     }
   };
 
@@ -365,7 +357,7 @@ const EmployeePage: React.FC = () => {
                         style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', marginTop: '5px' }}
                       >
                         Delete Entry
-                      </button>
+				  </button>
                     )}
                   </div>
                 </div>
