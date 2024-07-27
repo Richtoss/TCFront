@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useReducer } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,12 +26,18 @@ interface Employee {
   timecards: Timecard[];
 }
 
+// Reducer to force re-render
+const forceUpdateReducer = (state: number) => state + 1;
+
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [expandedEmployees, setExpandedEmployees] = useState<Record<string, boolean>>({});
   const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
+
+  // Force update state
+  const [, forceUpdate] = useReducer(forceUpdateReducer, 0);
 
   useEffect(() => {
     fetchEmployeeData();
@@ -43,10 +49,12 @@ const ManagerPage: React.FC = () => {
       const res = await axios.get<Employee[]>('https://tcbackend.onrender.com/api/timecard/all', {
         headers: { 'x-auth-token': token }
       });
-      setEmployees(res.data.map(employee => ({
+      const employeesData = res.data.map(employee => ({
         ...employee,
         timecards: employee.timecards.slice(-3) // Keep only the last 3 timecards
-      })));
+      }));
+      setEmployees(employeesData);
+      console.log('Fetched employees data:', employeesData);
     } catch (err) {
       console.error('Error fetching employee data:', err);
       setError('Failed to fetch employee data. Please try again later.');
@@ -59,23 +67,37 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployee = useCallback((employeeId: string) => {
-    setExpandedEmployees(prevState => ({
-      ...prevState,
-      [employeeId]: !prevState[employeeId]
-    }));
+    console.log('Toggling employee:', employeeId);
+    setExpandedEmployees(prevState => {
+      const newState = {
+        ...prevState,
+        [employeeId]: !prevState[employeeId]
+      };
+      console.log('New expanded employees state:', newState);
+      return newState;
+    });
+    forceUpdate(); // Force re-render
   }, []);
 
   const toggleTimecard = useCallback((timecardId: string) => {
-    setExpandedTimecards(prevState => ({
-      ...prevState,
-      [timecardId]: !prevState[timecardId]
-    }));
+    console.log('Toggling timecard:', timecardId);
+    setExpandedTimecards(prevState => {
+      const newState = {
+        ...prevState,
+        [timecardId]: !prevState[timecardId]
+      };
+      console.log('New expanded timecards state:', newState);
+      return newState;
+    });
+    forceUpdate(); // Force re-render
   }, []);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
+
+  console.log('Rendering ManagerPage. Expanded Employees:', expandedEmployees);
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
@@ -110,7 +132,10 @@ const ManagerPage: React.FC = () => {
           }}>
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
             <button
-              onClick={() => toggleEmployee(employee._id)}
+              onClick={() => {
+                console.log('Expansion button clicked for employee:', employee._id);
+                toggleEmployee(employee._id);
+              }}
               style={{
                 background: 'none',
                 border: 'none',
