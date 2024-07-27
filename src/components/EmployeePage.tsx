@@ -223,7 +223,7 @@ const EmployeePage: React.FC = () => {
     }
   };
 
-  return (
+ return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Dashboard</h1>
       {firstName && <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Welcome, {firstName}!</h2>}
