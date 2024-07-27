@@ -33,7 +33,6 @@ interface DecodedToken {
 interface UserData {
   name: string;
   email: string;
-  // Add other user properties as needed
 }
 
 const EmployeePage: React.FC = () => {
@@ -43,6 +42,8 @@ const EmployeePage: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [name, setName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [timecardExists, setTimecardExists] = useState<boolean>(false);
+  const [checkingTimecard, setCheckingTimecard] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -69,7 +70,6 @@ const EmployeePage: React.FC = () => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token) as DecodedToken;
-        // Token is valid, now fetch user data
         await fetchUserDataFromServer();
       } catch (error) {
         console.error('Error decoding token:', error);
@@ -116,7 +116,29 @@ const EmployeePage: React.FC = () => {
     navigate('/');
   };
 
+  const checkExistingTimecard = async () => {
+    setCheckingTimecard(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get<{ exists: boolean }>('https://tcbackend.onrender.com/api/timecard/check-current-week', {
+        headers: { 'x-auth-token': token }
+      });
+      setTimecardExists(res.data.exists);
+    } catch (err) {
+      console.error('Error checking existing timecard:', err);
+      setError('Failed to check for existing timecard. Please try again.');
+    } finally {
+      setCheckingTimecard(false);
+    }
+  };
+
   const createNewTimecard = async () => {
+    await checkExistingTimecard();
+    if (timecardExists) {
+      setError('A timecard for the current week already exists.');
+      return;
+    }
+
     const monday = getCurrentWeekMonday();
     const mondayString = monday.toISOString().split('T')[0];
 
@@ -266,6 +288,11 @@ const EmployeePage: React.FC = () => {
           Welcome, {name}!
         </h2>
       )}
+      {timecardExists && (
+        <p style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>
+          A timecard for the current week already exists.
+        </p>
+      )}
       <button 
         onClick={handleLogout} 
         style={{ 
@@ -284,18 +311,19 @@ const EmployeePage: React.FC = () => {
       </button>
       <button 
         onClick={createNewTimecard} 
+        disabled={checkingTimecard}
         style={{ 
           width: '100%', 
           marginBottom: '20px', 
           padding: '10px',
-          backgroundColor: '#4CAF50',
+          backgroundColor: checkingTimecard ? '#cccccc' : '#4CAF50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          cursor: 'pointer'
+          cursor: checkingTimecard ? 'not-allowed' : 'pointer'
         }}
       >
-        New Time Card
+        {checkingTimecard ? 'Checking...' : 'New Time Card'}
       </button>
       
       {error && (
