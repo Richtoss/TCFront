@@ -17,7 +17,6 @@ interface Timecard {
   entries: TimecardEntry[];
   totalHours: number;
   completed: boolean;
-  isExpanded: boolean;
 }
 
 interface Employee {
@@ -25,11 +24,12 @@ interface Employee {
   name: string;
   email: string;
   timecards: Timecard[];
-  isExpanded: boolean;
 }
 
 const ManagerPage: React.FC = () => {
-  const [employeeData, setEmployeeData] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
+  const [expandedTimecardIds, setExpandedTimecardIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -49,15 +49,10 @@ const ManagerPage: React.FC = () => {
       const res = await axios.get<Employee[]>('https://tcbackend.onrender.com/api/timecard/all', {
         headers: { 'x-auth-token': token }
       });
-      const processedData = res.data.map(employee => ({
+      setEmployees(res.data.map(employee => ({
         ...employee,
-        isExpanded: false,
-        timecards: employee.timecards.slice(-3).map(timecard => ({
-          ...timecard,
-          isExpanded: false
-        }))
-      }));
-      setEmployeeData(processedData);
+        timecards: employee.timecards.slice(-3) // Keep only the last 3 timecards
+      })));
     } catch (err) {
       console.error('Error fetching employee data:', err);
       setError('Failed to fetch employee data. Please try again later.');
@@ -72,29 +67,14 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployee = useCallback((employeeId: string) => {
-    setEmployeeData(prevData => 
-      prevData.map(employee => 
-        employee._id === employeeId
-          ? { ...employee, isExpanded: !employee.isExpanded }
-          : employee
-      )
-    );
+    setExpandedEmployeeId(prevId => prevId === employeeId ? null : employeeId);
   }, []);
 
-  const toggleTimecard = useCallback((employeeId: string, timecardId: string) => {
-    setEmployeeData(prevData => 
-      prevData.map(employee => 
-        employee._id === employeeId
-          ? {
-              ...employee,
-              timecards: employee.timecards.map(timecard => 
-                timecard._id === timecardId
-                  ? { ...timecard, isExpanded: !timecard.isExpanded }
-                  : timecard
-              )
-            }
-          : employee
-      )
+  const toggleTimecard = useCallback((timecardId: string) => {
+    setExpandedTimecardIds(prevIds => 
+      prevIds.includes(timecardId)
+        ? prevIds.filter(id => id !== timecardId)
+        : [...prevIds, timecardId]
     );
   }, []);
 
@@ -131,7 +111,7 @@ const ManagerPage: React.FC = () => {
         Logout
       </button>
 
-      {employeeData.map(employee => (
+      {employees.map(employee => (
         <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{ 
             display: 'flex', 
@@ -151,15 +131,15 @@ const ManagerPage: React.FC = () => {
                 padding: '5px 10px',
               }}
             >
-              {employee.isExpanded ? '▲' : '▼'}
+              {expandedEmployeeId === employee._id ? '▲' : '▼'}
             </button>
           </div>
-          {employee.isExpanded && (
+          {expandedEmployeeId === employee._id && (
             <div style={{ padding: '15px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
                   <div 
-                    onClick={() => toggleTimecard(employee._id, timecard._id)}
+                    onClick={() => toggleTimecard(timecard._id)}
                     style={{ 
                       cursor: 'pointer', 
                       display: 'flex', 
@@ -168,9 +148,9 @@ const ManagerPage: React.FC = () => {
                     }}
                   >
                     <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
-                    <span>{timecard.isExpanded ? '▲' : '▼'}</span>
+                    <span>{expandedTimecardIds.includes(timecard._id) ? '▲' : '▼'}</span>
                   </div>
-                  {timecard.isExpanded && (
+                  {expandedTimecardIds.includes(timecard._id) && (
                     <div style={{ marginTop: '10px' }}>
                       <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
                       {timecard.entries.map(entry => (
