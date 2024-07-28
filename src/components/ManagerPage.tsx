@@ -67,11 +67,9 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployeeCard = (employeeId: string) => {
-    setExpandedEmployeeId(prev => prev === employeeId ? null : employeeId);
-    // Reset expanded timecards when collapsing an employee card
-    if (expandedEmployeeId === employeeId) {
-      setExpandedTimecardIds([]);
-    }
+    setExpandedEmployeeId(prevId => prevId === employeeId ? null : employeeId);
+    // Reset expanded timecards when toggling employee cards
+    setExpandedTimecardIds([]);
   };
 
   const toggleTimecard = (timecardId: string) => {
