@@ -28,7 +28,7 @@ interface Employee {
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [expandedEmployees, setExpandedEmployees] = useState<{[key: string]: boolean}>({});
+  const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -65,8 +65,8 @@ const ManagerPage: React.FC = () => {
     navigate('/login');
   };
 
-  const toggleEmployee = (employeeId: string) => {
-    setExpandedEmployees(prev => ({
+  const toggleEmployeeCard = (employeeId: string) => {
+    setExpandedCards(prev => ({
       ...prev,
       [employeeId]: !prev[employeeId]
     }));
@@ -92,13 +92,13 @@ const ManagerPage: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f0f0f0', padding: '15px' }}>
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
             <button
-              onClick={() => toggleEmployee(employee._id)}
+              onClick={() => toggleEmployeeCard(employee._id)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', padding: '5px 10px' }}
             >
-              {expandedEmployees[employee._id] ? '▲' : '▼'}
+              {expandedCards[employee._id] ? '▲' : '▼'}
             </button>
           </div>
-          {expandedEmployees[employee._id] && (
+          {expandedCards[employee._id] && (
             <div style={{ padding: '15px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
