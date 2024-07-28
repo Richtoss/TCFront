@@ -28,7 +28,8 @@ interface Employee {
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({});
+  const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
+  const [expandedTimecardIds, setExpandedTimecardIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -66,10 +67,19 @@ const ManagerPage: React.FC = () => {
   };
 
   const toggleEmployeeCard = (employeeId: string) => {
-    setExpandedCards(prev => ({
-      ...prev,
-      [employeeId]: !prev[employeeId]
-    }));
+    setExpandedEmployeeId(prev => prev === employeeId ? null : employeeId);
+    // Reset expanded timecards when collapsing an employee card
+    if (expandedEmployeeId === employeeId) {
+      setExpandedTimecardIds([]);
+    }
+  };
+
+  const toggleTimecard = (timecardId: string) => {
+    setExpandedTimecardIds(prev => 
+      prev.includes(timecardId)
+        ? prev.filter(id => id !== timecardId)
+        : [...prev, timecardId]
+    );
   };
 
   const formatDate = (dateString: string): string => {
@@ -89,27 +99,47 @@ const ManagerPage: React.FC = () => {
 
       {employees.map(employee => (
         <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f0f0f0', padding: '15px' }}>
+          <div 
+            onClick={() => toggleEmployeeCard(employee._id)}
+            style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              backgroundColor: '#f0f0f0', 
+              padding: '15px',
+              cursor: 'pointer'
+            }}
+          >
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
-            <button
-              onClick={() => toggleEmployeeCard(employee._id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', padding: '5px 10px' }}
-            >
-              {expandedCards[employee._id] ? '▲' : '▼'}
-            </button>
+            <span>{expandedEmployeeId === employee._id ? '▲' : '▼'}</span>
           </div>
-          {expandedCards[employee._id] && (
+          {expandedEmployeeId === employee._id && (
             <div style={{ padding: '15px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
-                  <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
-                  <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
-                  {timecard.entries.map(entry => (
-                    <div key={entry.id} style={{ marginTop: '5px', fontSize: '0.9em', borderLeft: '2px solid #ddd', paddingLeft: '10px' }}>
-                      <p style={{ margin: '5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
-                      <p style={{ margin: '5px 0' }}>{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                  <div 
+                    onClick={() => toggleTimecard(timecard._id)}
+                    style={{ 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center'
+                    }}
+                  >
+                    <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
+                    <span>{expandedTimecardIds.includes(timecard._id) ? '▲' : '▼'}</span>
+                  </div>
+                  {expandedTimecardIds.includes(timecard._id) && (
+                    <div style={{ marginTop: '10px' }}>
+                      <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
+                      {timecard.entries.map(entry => (
+                        <div key={entry.id} style={{ marginTop: '5px', fontSize: '0.9em', borderLeft: '2px solid #ddd', paddingLeft: '10px' }}>
+                          <p style={{ margin: '5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
+                          <p style={{ margin: '5px 0' }}>{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               ))}
             </div>
