@@ -121,65 +121,69 @@ const ManagerPage: React.FC = () => {
       
       {error && <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>}
 
-      {employees.map(employee => (
-        <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            backgroundColor: '#f0f0f0',
-            padding: '15px',
-          }}>
-            <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
-            <button
-              onClick={() => {
-                console.log('Expansion button clicked for employee:', employee._id);
-                toggleEmployee(employee._id);
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '20px',
-                padding: '5px 10px',
-              }}
-            >
-              {expandedEmployees[employee._id] ? '▲' : '▼'}
-            </button>
-          </div>
-          {expandedEmployees[employee._id] && (
-            <div style={{ padding: '15px' }}>
-              {employee.timecards.map(timecard => (
-                <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
-                  <div 
-                    onClick={() => toggleTimecard(timecard._id)}
-                    style={{ 
-                      cursor: 'pointer', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center'
-                    }}
-                  >
-                    <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
-                    <span>{expandedTimecards[timecard._id] ? '▲' : '▼'}</span>
-                  </div>
-                  {expandedTimecards[timecard._id] && (
-                    <div style={{ marginTop: '10px' }}>
-                      <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
-                      {timecard.entries.map(entry => (
-                        <div key={entry.id} style={{ marginTop: '5px', fontSize: '0.9em', borderLeft: '2px solid #ddd', paddingLeft: '10px' }}>
-                          <p style={{ margin: '5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
-                          <p style={{ margin: '5px 0' }}>{entry.startTime} to {entry.endTime} - {entry.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+      {employees.map(employee => {
+        console.log('Rendering employee:', employee._id, employee.name);
+        return (
+          <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              backgroundColor: '#f0f0f0',
+              padding: '15px',
+            }}>
+              <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event bubbling
+                  console.log('Expansion button clicked for employee:', employee._id);
+                  toggleEmployee(employee._id);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  padding: '5px 10px',
+                }}
+              >
+                {expandedEmployees[employee._id] ? '▲' : '▼'}
+              </button>
             </div>
-          )}
-        </div>
-      ))}
+            {expandedEmployees[employee._id] && (
+              <div style={{ padding: '15px' }}>
+                {employee.timecards.map(timecard => (
+                  <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
+                    <div 
+                      onClick={() => toggleTimecard(timecard._id)}
+                      style={{ 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center'
+                      }}
+                    >
+                      <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
+                      <span>{expandedTimecards[timecard._id] ? '▲' : '▼'}</span>
+                    </div>
+                    {expandedTimecards[timecard._id] && (
+                      <div style={{ marginTop: '10px' }}>
+                        <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
+                        {timecard.entries.map(entry => (
+                          <div key={entry.id} style={{ marginTop: '5px', fontSize: '0.9em', borderLeft: '2px solid #ddd', paddingLeft: '10px' }}>
+                            <p style={{ margin: '5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
+                            <p style={{ margin: '5px 0' }}>{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
