@@ -31,7 +31,7 @@ const ManagerPage: React.FC = () => {
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>('');
-  const [activeView, setActiveView] = useState<'default' | 'employeeManagement' | 'history' | 'timeCardGeneration'>('default');
+  const [activeView, setActiveView] = useState<'timeCards' | 'employeeManagement' | 'history' | 'timeCardGeneration'>('timeCards');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,7 +75,7 @@ const ManagerPage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
-  const renderDefaultView = () => (
+  const renderTimeCards = () => (
     <>
       {employees.map(employee => (
         <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
@@ -156,13 +156,40 @@ const ManagerPage: React.FC = () => {
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Manager's Dashboard</h1>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button onClick={() => setActiveView('employeeManagement')} style={buttonStyle}>
+        <button 
+          onClick={() => setActiveView('timeCards')} 
+          style={{
+            ...buttonStyle,
+            backgroundColor: activeView === 'timeCards' ? '#45a049' : '#4CAF50'
+          }}
+        >
+          Time Cards
+        </button>
+        <button 
+          onClick={() => setActiveView('employeeManagement')} 
+          style={{
+            ...buttonStyle,
+            backgroundColor: activeView === 'employeeManagement' ? '#45a049' : '#4CAF50'
+          }}
+        >
           Employee Management
         </button>
-        <button onClick={() => setActiveView('history')} style={buttonStyle}>
+        <button 
+          onClick={() => setActiveView('history')} 
+          style={{
+            ...buttonStyle,
+            backgroundColor: activeView === 'history' ? '#45a049' : '#4CAF50'
+          }}
+        >
           History
         </button>
-        <button onClick={() => setActiveView('timeCardGeneration')} style={buttonStyle}>
+        <button 
+          onClick={() => setActiveView('timeCardGeneration')} 
+          style={{
+            ...buttonStyle,
+            backgroundColor: activeView === 'timeCardGeneration' ? '#45a049' : '#4CAF50'
+          }}
+        >
           Time Card Generation
         </button>
       </div>
@@ -182,7 +209,7 @@ const ManagerPage: React.FC = () => {
       
       {error && <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>}
 
-      {activeView === 'default' && renderDefaultView()}
+      {activeView === 'timeCards' && renderTimeCards()}
       {activeView === 'employeeManagement' && renderEmployeeManagement()}
       {activeView === 'history' && renderHistory()}
       {activeView === 'timeCardGeneration' && renderTimeCardGeneration()}
