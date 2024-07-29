@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 
 interface TimecardEntry {
   id: number;
@@ -157,28 +156,29 @@ const ManagerPage: React.FC = () => {
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Manager's Dashboard</h1>
       
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <Button onClick={() => setActiveView('employeeManagement')}>
+        <button onClick={() => setActiveView('employeeManagement')} style={buttonStyle}>
           Employee Management
-        </Button>
-        <Button onClick={() => setActiveView('history')}>
+        </button>
+        <button onClick={() => setActiveView('history')} style={buttonStyle}>
           History
-        </Button>
-        <Button onClick={() => setActiveView('timeCardGeneration')}>
+        </button>
+        <button onClick={() => setActiveView('timeCardGeneration')} style={buttonStyle}>
           Time Card Generation
-        </Button>
+        </button>
       </div>
 
-      <Button 
+      <button 
         onClick={handleLogout} 
         style={{ 
+          ...buttonStyle,
           position: 'absolute', 
           top: '20px', 
           right: '20px',
+          backgroundColor: '#f44336',
         }}
-        variant="destructive"
       >
         Logout
-      </Button>
+      </button>
       
       {error && <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>}
 
@@ -188,6 +188,16 @@ const ManagerPage: React.FC = () => {
       {activeView === 'timeCardGeneration' && renderTimeCardGeneration()}
     </div>
   );
+};
+
+const buttonStyle = {
+  padding: '10px 15px',
+  backgroundColor: '#4CAF50',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontSize: '16px',
 };
 
 export default ManagerPage;
