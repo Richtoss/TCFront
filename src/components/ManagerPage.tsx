@@ -2,7 +2,38 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-// ... (previous interfaces remain the same)
+interface TimecardEntry {
+  id: number;
+  day: string;
+  jobName: string;
+  startTime: string;
+  endTime: string;
+  description: string;
+}
+
+interface Timecard {
+  _id: string;
+  weekStartDate: string;
+  entries: TimecardEntry[];
+  totalHours: number;
+  completed: boolean;
+}
+
+interface Employee {
+  _id: string;
+  name: string;
+  email: string;
+  timecards: Timecard[];
+}
+
+interface NewEmployee {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  isManager: boolean;
+  notes: string;
+}
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -56,7 +87,58 @@ const ManagerPage: React.FC = () => {
     }
   };
 
-  // ... (handleLogout, toggleEmployee, toggleTimecard, formatDate functions remain the same)
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  const toggleEmployee = (employeeId: string) => {
+    setExpandedEmployee(prev => prev === employeeId ? null : employeeId);
+  };
+
+  const toggleTimecard = (timecardId: string) => {
+    setExpandedTimecards(prev => ({
+      ...prev,
+      [timecardId]: !prev[timecardId]
+    }));
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleNewEmployeeChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewEmployee(prev => ({
+      ...prev,
+      [name]: name === 'isManager' ? (e.target as HTMLInputElement).checked : value
+    }));
+  };
+
+  const handleNewEmployeeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('https://tcbackend.onrender.com/api/auth/register', newEmployee, {
+        headers: { 'x-auth-token': token }
+      });
+      setShowNewEmployeeForm(false);
+      setNewEmployee({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        isManager: false,
+        notes: ''
+      });
+      fetchEmployeeData(); // Refresh the employee list
+      setError('');
+    } catch (err) {
+      console.error('Error creating new employee:', err);
+      setError('Failed to create new employee. Please try again.');
+    }
+  };
 
   const renderTimeCards = (employeeData: Employee[], title: string) => (
     <>
@@ -114,11 +196,104 @@ const ManagerPage: React.FC = () => {
     </>
   );
 
-  // ... (renderEmployeeManagement function remains the same)
+  const renderEmployeeManagement = () => (
+    <div>
+      <h2>Employee Management</h2>
+      <button 
+        onClick={() => setShowNewEmployeeForm(true)} 
+        style={buttonStyle}
+      >
+        Create New Employee
+      </button>
+      
+      {showNewEmployeeForm && (
+        <form onSubmit={handleNewEmployeeSubmit} style={{ marginTop: '20px' }}>
+          <h3>New Employee Information</h3>
+          <div style={formGroupStyle}>
+            <label htmlFor="name">Name:</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={newEmployee.name}
+              onChange={handleNewEmployeeChange}
+              required
+              style={inputStyle}
+            />
+          </div>
+          <div style={formGroupStyle}>
+            <label htmlFor="email">Email:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={newEmployee.email}
+              onChange={handleNewEmployeeChange}
+              required
+              style={inputStyle}
+            />
+          </div>
+          <div style={formGroupStyle}>
+            <label htmlFor="password">Password:</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={newEmployee.password}
+              onChange={handleNewEmployeeChange}
+              required
+              style={inputStyle}
+            />
+          </div>
+          <div style={formGroupStyle}>
+            <label htmlFor="phone">Phone:</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={newEmployee.phone}
+              onChange={handleNewEmployeeChange}
+              style={inputStyle}
+            />
+          </div>
+          <div style={formGroupStyle}>
+            <label htmlFor="isManager">
+              <input
+                type="checkbox"
+                id="isManager"
+                name="isManager"
+                checked={newEmployee.isManager}
+                onChange={handleNewEmployeeChange}
+              />
+              Is Manager
+            </label>
+          </div>
+          <div style={formGroupStyle}>
+            <label htmlFor="notes">Notes:</label>
+            <textarea
+              id="notes"
+              name="notes"
+              value={newEmployee.notes}
+              onChange={handleNewEmployeeChange}
+              style={{...inputStyle, height: '100px'}}
+            />
+          </div>
+          <button type="submit" style={buttonStyle}>Submit</button>
+          <button type="button" onClick={() => setShowNewEmployeeForm(false)} style={{...buttonStyle, backgroundColor: '#f44336', marginLeft: '10px'}}>Cancel</button>
+        </form>
+      )}
+    </div>
+  );
 
   const renderHistory = () => renderTimeCards(historicalEmployees, "Historical Time Cards");
 
-  // ... (renderTimeCardGeneration function remains the same)
+  const renderTimeCardGeneration = () => (
+    <div>
+      <h2>Time Card Generation</h2>
+      {/* Add time card generation functionality here */}
+      <p>This feature is not yet implemented.</p>
+    </div>
+  );
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
@@ -186,6 +361,26 @@ const ManagerPage: React.FC = () => {
   );
 };
 
-// ... (buttonStyle, formGroupStyle, and inputStyle remain the same)
+const buttonStyle = {
+  padding: '10px 15px',
+  backgroundColor: '#4CAF50',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontSize: '16px',
+};
+
+const formGroupStyle = {
+  marginBottom: '15px',
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '8px',
+  borderRadius: '4px',
+  border: '1px solid #ccc',
+  fontSize: '16px',
+};
 
 export default ManagerPage;
