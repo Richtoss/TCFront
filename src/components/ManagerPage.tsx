@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TimecardEntry {
   id: number;
@@ -51,6 +52,7 @@ const ManagerPage: React.FC = () => {
     isManager: false,
     notes: ''
   });
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,7 +68,7 @@ const ManagerPage: React.FC = () => {
       });
       setEmployees(res.data.map(employee => ({
         ...employee,
-        timecards: employee.timecards.slice(-3) // Only keep the last 3 timecards
+        timecards: employee.timecards.slice(-3)
       })));
     } catch (err) {
       console.error('Error fetching employee data:', err);
@@ -80,7 +82,7 @@ const ManagerPage: React.FC = () => {
       const res = await axios.get<Employee[]>('https://tcbackend.onrender.com/api/timecard/all', {
         headers: { 'x-auth-token': token }
       });
-      setHistoricalEmployees(res.data); // Keep all timecards
+      setHistoricalEmployees(res.data);
     } catch (err) {
       console.error('Error fetching historical employee data:', err);
       setError('Failed to fetch historical employee data. Please try again later.');
@@ -89,7 +91,7 @@ const ManagerPage: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/');
   };
 
   const toggleEmployee = (employeeId: string) => {
@@ -132,7 +134,7 @@ const ManagerPage: React.FC = () => {
         isManager: false,
         notes: ''
       });
-      fetchEmployeeData(); // Refresh the employee list
+      fetchEmployeeData();
       setError('');
     } catch (err) {
       console.error('Error creating new employee:', err);
@@ -140,49 +142,52 @@ const ManagerPage: React.FC = () => {
     }
   };
 
+  const renderMenu = () => (
+    <div className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 transform ${menuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out z-50`}>
+      <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4">
+        <X size={24} />
+      </button>
+      <h2 className="text-xl font-bold mb-6">Menu</h2>
+      <div className="flex flex-col space-y-4">
+        <button onClick={() => { setActiveView('timeCards'); setMenuOpen(false); }} className="text-left">Time Cards</button>
+        <button onClick={() => { setActiveView('employeeManagement'); setMenuOpen(false); }} className="text-left">Employee Management</button>
+        <button onClick={() => { setActiveView('history'); setMenuOpen(false); }} className="text-left">History</button>
+        <button onClick={() => { setActiveView('timeCardGeneration'); setMenuOpen(false); }} className="text-left">Time Card Generation</button>
+        <button onClick={handleLogout} className="text-left text-red-400">Logout</button>
+      </div>
+    </div>
+  );
+
   const renderTimeCards = (employeeData: Employee[], title: string) => (
-    <>
-      <h2>{title}</h2>
+    <div>
+      <h2 className="text-xl font-bold mb-4">{title}</h2>
       {employeeData.map(employee => (
-        <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
+        <div key={employee._id} className="bg-gray-700 rounded-lg p-4 mb-4">
           <div 
             onClick={() => toggleEmployee(employee._id)} 
-            style={{ 
-              cursor: 'pointer', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              backgroundColor: '#f0f0f0',
-              padding: '10px',
-              borderRadius: '4px'
-            }}
+            className="cursor-pointer flex justify-between items-center"
           >
-            <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
-            <span>{expandedEmployee === employee._id ? '▲' : '▼'}</span>
+            <h3 className="text-lg font-semibold">{employee.name} - {employee.email}</h3>
+            {expandedEmployee === employee._id ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
           </div>
           {expandedEmployee === employee._id && (
-            <div style={{ marginTop: '10px' }}>
+            <div className="mt-4">
               {employee.timecards.map(timecard => (
-                <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
+                <div key={timecard._id} className="bg-gray-600 rounded p-3 mb-3">
                   <div 
                     onClick={() => toggleTimecard(timecard._id)}
-                    style={{ 
-                      cursor: 'pointer', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center'
-                    }}
+                    className="cursor-pointer flex justify-between items-center"
                   >
-                    <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
-                    <span>{expandedTimecards[timecard._id] ? '▲' : '▼'}</span>
+                    <h4 className="font-medium">Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h4>
+                    {expandedTimecards[timecard._id] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                   </div>
                   {expandedTimecards[timecard._id] && (
-                    <div style={{ marginTop: '10px' }}>
+                    <div className="mt-2">
                       <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
                       {timecard.entries.map(entry => (
-                        <div key={entry.id} style={{ marginTop: '5px', fontSize: '0.9em', borderLeft: '2px solid #ddd', paddingLeft: '10px' }}>
-                          <p style={{ margin: '5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
-                          <p style={{ margin: '5px 0' }}>{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                        <div key={entry.id} className="border-l-2 border-gray-500 pl-3 mt-2">
+                          <p className="font-medium">{entry.day} - {entry.jobName}</p>
+                          <p className="text-sm text-gray-300">{entry.startTime} to {entry.endTime} - {entry.description}</p>
                         </div>
                       ))}
                     </div>
@@ -193,24 +198,24 @@ const ManagerPage: React.FC = () => {
           )}
         </div>
       ))}
-    </>
+    </div>
   );
 
   const renderEmployeeManagement = () => (
     <div>
-      <h2>Employee Management</h2>
+      <h2 className="text-xl font-bold mb-4">Employee Management</h2>
       <button 
         onClick={() => setShowNewEmployeeForm(true)} 
-        style={buttonStyle}
+        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
       >
         Create New Employee
       </button>
       
       {showNewEmployeeForm && (
-        <form onSubmit={handleNewEmployeeSubmit} style={{ marginTop: '20px' }}>
-          <h3>New Employee Information</h3>
-          <div style={formGroupStyle}>
-            <label htmlFor="name">Name:</label>
+        <form onSubmit={handleNewEmployeeSubmit} className="bg-gray-700 p-4 rounded">
+          <h3 className="text-lg font-semibold mb-4">New Employee Information</h3>
+          <div className="mb-4">
+            <label htmlFor="name" className="block mb-1">Name:</label>
             <input
               type="text"
               id="name"
@@ -218,11 +223,11 @@ const ManagerPage: React.FC = () => {
               value={newEmployee.name}
               onChange={handleNewEmployeeChange}
               required
-              style={inputStyle}
+              className="w-full px-3 py-2 bg-gray-600 rounded"
             />
           </div>
-          <div style={formGroupStyle}>
-            <label htmlFor="email">Email:</label>
+          <div className="mb-4">
+            <label htmlFor="email" className="block mb-1">Email:</label>
             <input
               type="email"
               id="email"
@@ -230,11 +235,11 @@ const ManagerPage: React.FC = () => {
               value={newEmployee.email}
               onChange={handleNewEmployeeChange}
               required
-              style={inputStyle}
+              className="w-full px-3 py-2 bg-gray-600 rounded"
             />
           </div>
-          <div style={formGroupStyle}>
-            <label htmlFor="password">Password:</label>
+          <div className="mb-4">
+            <label htmlFor="password" className="block mb-1">Password:</label>
             <input
               type="password"
               id="password"
@@ -242,145 +247,80 @@ const ManagerPage: React.FC = () => {
               value={newEmployee.password}
               onChange={handleNewEmployeeChange}
               required
-              style={inputStyle}
+              className="w-full px-3 py-2 bg-gray-600 rounded"
             />
           </div>
-          <div style={formGroupStyle}>
-            <label htmlFor="phone">Phone:</label>
+          <div className="mb-4">
+            <label htmlFor="phone" className="block mb-1">Phone:</label>
             <input
               type="tel"
               id="phone"
               name="phone"
               value={newEmployee.phone}
               onChange={handleNewEmployeeChange}
-              style={inputStyle}
+              className="w-full px-3 py-2 bg-gray-600 rounded"
             />
           </div>
-          <div style={formGroupStyle}>
-            <label htmlFor="isManager">
+          <div className="mb-4">
+            <label className="flex items-center">
               <input
                 type="checkbox"
                 id="isManager"
                 name="isManager"
                 checked={newEmployee.isManager}
                 onChange={handleNewEmployeeChange}
+                className="mr-2"
               />
               Is Manager
             </label>
           </div>
-          <div style={formGroupStyle}>
-            <label htmlFor="notes">Notes:</label>
+          <div className="mb-4">
+            <label htmlFor="notes" className="block mb-1">Notes:</label>
             <textarea
               id="notes"
               name="notes"
               value={newEmployee.notes}
               onChange={handleNewEmployeeChange}
-              style={{...inputStyle, height: '100px'}}
+              className="w-full px-3 py-2 bg-gray-600 rounded"
             />
           </div>
-          <button type="submit" style={buttonStyle}>Submit</button>
-          <button type="button" onClick={() => setShowNewEmployeeForm(false)} style={{...buttonStyle, backgroundColor: '#f44336', marginLeft: '10px'}}>Cancel</button>
+          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mr-2">Submit</button>
+          <button type="button" onClick={() => setShowNewEmployeeForm(false)} className="bg-red-500 text-white px-4 py-2 rounded">Cancel</button>
         </form>
       )}
     </div>
   );
 
-  const renderHistory = () => renderTimeCards(historicalEmployees, "Historical Time Cards");
-
   const renderTimeCardGeneration = () => (
     <div>
-      <h2>Time Card Generation</h2>
-      {/* Add time card generation functionality here */}
+      <h2 className="text-xl font-bold mb-4">Time Card Generation</h2>
       <p>This feature is not yet implemented.</p>
     </div>
   );
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Manager's Dashboard</h1>
-      
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button 
-          onClick={() => setActiveView('timeCards')} 
-          style={{
-            ...buttonStyle,
-            backgroundColor: activeView === 'timeCards' ? '#45a049' : '#4CAF50'
-          }}
-        >
-          Time Cards
+    <div className="bg-gray-900 text-white min-h-screen">
+      <header className="bg-gray-800 p-4 flex justify-between items-center">
+        <button onClick={() => setMenuOpen(true)} className="text-white">
+          <Menu size={24} />
         </button>
-        <button 
-          onClick={() => setActiveView('employeeManagement')} 
-          style={{
-            ...buttonStyle,
-            backgroundColor: activeView === 'employeeManagement' ? '#45a049' : '#4CAF50'
-          }}
-        >
-          Employee Management
-        </button>
-        <button 
-          onClick={() => setActiveView('history')} 
-          style={{
-            ...buttonStyle,
-            backgroundColor: activeView === 'history' ? '#45a049' : '#4CAF50'
-          }}
-        >
-          History
-        </button>
-        <button 
-          onClick={() => setActiveView('timeCardGeneration')} 
-          style={{
-            ...buttonStyle,
-            backgroundColor: activeView === 'timeCardGeneration' ? '#45a049' : '#4CAF50'
-          }}
-        >
-          Time Card Generation
-        </button>
-      </div>
+        <h1 className="text-xl font-bold">Manager's Dashboard</h1>
+      </header>
 
-      <button 
-        onClick={handleLogout} 
-        style={{ 
-          ...buttonStyle,
-          position: 'absolute', 
-          top: '20px', 
-          right: '20px',
-          backgroundColor: '#f44336',
-        }}
-      >
-        Logout
-      </button>
-      
-      {error && <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>}
+      {renderMenu()}
 
-      {activeView === 'timeCards' && renderTimeCards(employees, "Recent Time Cards")}
-      {activeView === 'employeeManagement' && renderEmployeeManagement()}
-      {activeView === 'history' && renderHistory()}
-      {activeView === 'timeCardGeneration' && renderTimeCardGeneration()}
+      <main className="p-4">
+        {error && <p className="text-red-400 mb-4">{error}</p>}
+
+        <div className="bg-gray-800 rounded-lg p-4 mb-4">
+          {activeView === 'timeCards' && renderTimeCards(employees, "Recent Time Cards")}
+          {activeView === 'employeeManagement' && renderEmployeeManagement()}
+          {activeView === 'history' && renderTimeCards(historicalEmployees, "Historical Time Cards")}
+          {activeView === 'timeCardGeneration' && renderTimeCardGeneration()}
+        </div>
+      </main>
     </div>
   );
-};
-
-const buttonStyle = {
-  padding: '10px 15px',
-  backgroundColor: '#4CAF50',
-  color: 'white',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '16px',
-};
-
-const formGroupStyle = {
-  marginBottom: '15px',
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '8px',
-  borderRadius: '4px',
-  border: '1px solid #ccc',
-  fontSize: '16px',
 };
 
 export default ManagerPage;

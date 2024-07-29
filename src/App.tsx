@@ -5,7 +5,6 @@ import EmployeePage from './components/EmployeePage';
 import ManagerPage from './components/ManagerPage';
 import PrivateRoute from './components/PrivateRoute';
 
-
 const App: React.FC = () => {
   return (
     <Router>

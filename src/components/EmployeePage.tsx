@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TimecardEntry {
   id: number;
@@ -270,214 +271,168 @@ const EmployeePage: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-screen bg-gray-900 text-white">Loading...</div>;
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>Employee Dashboard</h1>
-      {name && (
-        <h2 style={{ 
-          textAlign: 'center', 
-          marginBottom: '20px',
-          fontSize: '1.2em',
-          fontWeight: 'normal',
-          color: '#4a4a4a'
-        }}>
-          Welcome, {name}!
-        </h2>
-      )}
-      {timecardExists && (
-        <p style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>
-          A timecard for the current week already exists.
-        </p>
-      )}
-      <button 
-        onClick={handleLogout} 
-        style={{ 
-          position: 'absolute', 
-          top: '20px', 
-          right: '20px',
-          padding: '10px',
-          backgroundColor: '#f44336',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        Logout
-      </button>
-      <button 
-        onClick={createNewTimecard} 
-        disabled={checkingTimecard}
-        style={{ 
-          width: '100%', 
-          marginBottom: '20px', 
-          padding: '10px',
-          backgroundColor: checkingTimecard ? '#cccccc' : '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: checkingTimecard ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {checkingTimecard ? 'Checking...' : 'New Time Card'}
-      </button>
-      
-      {timecards.map(timecard => (
-        <div key={timecard._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
-          <div 
-            onClick={() => toggleTimecard(timecard._id)} 
-            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-          >
-            <h2 style={{ margin: 0 }}>
-              {new Date(timecard.weekStartDate).toLocaleDateString()} | Total Hours: {timecard.totalHours.toFixed(2)}
-              {timecard.completed && <span style={{ color: 'green', marginLeft: '10px' }}>(Completed)</span>}
-            </h2>
-            <span>{timecard.expanded ? '▲' : '▼'}</span>
-          </div>
-          {timecard.expanded && (
-            <div style={{ marginTop: '10px' }}>
-              {timecard.entries.map((entry) => (
-                <div key={entry.id} style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <p style={{ margin: '0 0 5px 0' }}><strong>{entry.day} - {entry.jobName}</strong></p>
-                    <p style={{ margin: 0, fontSize: '0.9em', color: '#666' }}>{entry.description}</p>
+    <div className="bg-gray-900 text-white min-h-screen">
+      <header className="bg-gray-800 p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">Employee Dashboard</h1>
+        <button 
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-300"
+        >
+          Logout
+        </button>
+      </header>
+
+      <main className="p-4 max-w-4xl mx-auto">
+        {name && (
+          <h2 className="text-2xl font-semibold mb-6">Welcome, {name}!</h2>
+        )}
+        
+        {timecardExists && (
+          <p className="text-red-400 mb-4">
+            A timecard for the current week already exists.
+          </p>
+        )}
+
+        <button 
+          onClick={createNewTimecard} 
+          disabled={checkingTimecard}
+          className={`w-full mb-6 py-2 px-4 rounded ${
+            checkingTimecard ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          } transition duration-300`}
+        >
+          {checkingTimecard ? 'Checking...' : 'New Time Card'}
+        </button>
+        
+        {error && <p className="text-red-400 mb-4">{error}</p>}
+
+        {timecards.map(timecard => (
+          <div key={timecard._id} className="bg-gray-800 rounded-lg p-4 mb-4">
+            <div 
+              onClick={() => toggleTimecard(timecard._id)} 
+              className="cursor-pointer flex justify-between items-center"
+            >
+              <h3 className="text-lg font-semibold">
+                {new Date(timecard.weekStartDate).toLocaleDateString()} | Total Hours: {timecard.totalHours.toFixed(2)}
+                {timecard.completed && <span className="ml-2 text-green-400">(Completed)</span>}
+              </h3>
+              {timecard.expanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+            </div>
+            {timecard.expanded && (
+              <div className="mt-4">
+                {timecard.entries.map((entry) => (
+                  <div key={entry.id} className="bg-gray-700 p-3 rounded mb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{entry.day} - {entry.jobName}</p>
+                        <p className="text-sm text-gray-300">{entry.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p>{calculateHoursDifference(entry.startTime, entry.endTime).toFixed(2)} hours</p>
+                        <p className="text-sm text-gray-300">{entry.startTime} - {entry.endTime}</p>
+                        {!timecard.completed && (
+                          <button 
+                            onClick={() => deleteEntry(timecard._id, entry.id)} 
+                            className="text-red-400 text-sm mt-1 hover:text-red-300"
+                          >
+                            Delete Entry
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: 0 }}>{calculateHoursDifference(entry.startTime, entry.endTime).toFixed(2)} hours</p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '0.9em', color: '#666' }}>{entry.startTime} - {entry.endTime}</p>
-                    {!timecard.completed && (
-                      <button 
-                        onClick={() => deleteEntry(timecard._id, entry.id)} 
-                        style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', marginTop: '5px' }}
+                ))}
+                
+                {!timecard.completed && editingCardId === timecard._id && (
+                  <div className="mt-4 bg-gray-700 p-4 rounded">
+                    <h4 className="text-lg font-semibold mb-2">Add New Entry</h4>
+                    <div className="space-y-3">
+                      <select 
+                        value={newEntry.day} 
+                        onChange={(e) => setNewEntry({...newEntry, day: e.target.value})}
+                        className="w-full p-2 bg-gray-600 rounded"
                       >
-                        Delete Entry
+                        <option value="">Select day</option>
+                        {daysOfWeek.map(day => (
+                          <option key={day} value={day}>{day}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Job Name"
+                        value={newEntry.jobName}
+                        onChange={(e) => setNewEntry({...newEntry, jobName: e.target.value})}
+                        className="w-full p-2 bg-gray-600 rounded"
+                      />
+                      <select
+                        value={newEntry.startTime}
+                        onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value, endTime: ''})}
+                        className="w-full p-2 bg-gray-600 rounded"
+                      >
+                        <option value="">Select start time</option>
+                        {startTimeOptions.map(time => (
+                          <option key={time} value={time}>{time}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={newEntry.endTime}
+                        onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
+                        className="w-full p-2 bg-gray-600 rounded"
+                      >
+                        <option value="">Select end time</option>
+                        {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
+                          <option key={time} value={time}>{time}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={newEntry.description}
+                        onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
+                        className="w-full p-2 bg-gray-600 rounded"
+                      />
+                      <button 
+                        onClick={() => addEntry(timecard._id)}
+                        className="w-full p-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-300"
+                      >
+                        Add Entry
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))}
-              
-              {!timecard.completed && editingCardId === timecard._id && (
-                <div style={{ marginTop: '20px' }}>
-                  <h4>Add New Entry</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <select 
-                      value={newEntry.day} 
-                      onChange={(e) => setNewEntry({...newEntry, day: e.target.value})}
-                      style={{ padding: '5px' }}
-                    >
-                      <option value="">Select day</option>
-                      {daysOfWeek.map(day => (
-                        <option key={day} value={day}>{day}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Job Name"
-                      value={newEntry.jobName}
-                      onChange={(e) => setNewEntry({...newEntry, jobName: e.target.value})}
-                      style={{ padding: '5px' }}
-                    />
-                    <select
-                      value={newEntry.startTime}
-                      onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value, endTime: ''})}
-                      style={{ padding: '5px' }}
-                    >
-                      <option value="">Select start time</option>
-                      {startTimeOptions.map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={newEntry.endTime}
-                      onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
-                      style={{ padding: '5px' }}
-                    >
-                      <option value="">Select end time</option>
-                      {allEndTimeOptions.slice(allEndTimeOptions.indexOf(newEntry.startTime) + 1).map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      value={newEntry.description}
-                      onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
-                      style={{ padding: '5px' }}
-                    />
+                )}
+                
+                {!timecard.completed && (
+                  <div className="mt-4 flex justify-between">
                     <button 
-                      onClick={() => addEntry(timecard._id)}
-                      style={{ 
-                        padding: '10px', 
-                        backgroundColor: '#4CAF50', 
-                        color: 'white', 
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
+                      onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300"
                     >
-                      Add Entry
+                      {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
+                    </button>
+                    <button 
+                      onClick={() => deleteTimecard(timecard._id)}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-300"
+                    >
+                      Delete Time Card
+                    </button>
+                    <button 
+                      onClick={() => markTimecardComplete(timecard._id)}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition duration-300"
+                    >
+                      Mark Complete
                     </button>
                   </div>
-                </div>
-              )}
-              
-              {!timecard.completed && (
-                <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                  <button 
-                    onClick={() => editingCardId === timecard._id ? setEditingCardId(null) : setEditingCardId(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#2196F3', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    {editingCardId === timecard._id ? 'Cancel Edit' : 'Edit Time Card'}
-                  </button>
-                  <button 
-                    onClick={() => deleteTimecard(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#f44336', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    Delete Time Card
-                  </button>
-                  <button 
-                    onClick={() => markTimecardComplete(timecard._id)}
-                    style={{ 
-                      padding: '10px', 
-                      backgroundColor: '#FFA500', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    Mark Complete
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </main>
     </div>
   );
 };
 
 export default EmployeePage;
-
-
-
-

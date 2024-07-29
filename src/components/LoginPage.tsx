@@ -34,42 +34,49 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
-      <div style={{ width: '100%', maxWidth: '400px', padding: '20px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Employee Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>Email</label>
+    <div className="flex justify-center items-center min-h-screen bg-gray-900">
+      <div className="w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-md">
+        <h2 className="text-3xl font-bold text-center text-white mb-8">Employee Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+              Email
+            </label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your email"
               required
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>Password</label>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+              Password
+            </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your password"
               required
             />
           </div>
           {error && (
-            <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>
+            <div className="text-red-500 text-sm">{error}</div>
           )}
-          <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button
+            type="submit"
+            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
             Log In
           </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px', color: '#666' }}>
+        <p className="mt-6 text-center text-sm text-gray-400">
           Forgot your password? Contact your manager.
         </p>
       </div>
