@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface TimecardEntry {
   id: number;
@@ -28,10 +29,10 @@ interface Employee {
 
 const ManagerPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
-  const [expandedTimecardIds, setExpandedTimecardIds] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
+  const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string>('');
+  const [activeView, setActiveView] = useState<'default' | 'employeeManagement' | 'history' | 'timeCardGeneration'>('default');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,25 +40,18 @@ const ManagerPage: React.FC = () => {
   }, []);
 
   const fetchEmployeeData = async () => {
-    setIsLoading(true);
-    setError(null);
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
       const res = await axios.get<Employee[]>('https://tcbackend.onrender.com/api/timecard/all', {
         headers: { 'x-auth-token': token }
       });
       setEmployees(res.data.map(employee => ({
         ...employee,
-        timecards: employee.timecards.slice(-3) // Keep only the last 3 timecards
+        timecards: employee.timecards.slice(-3) // Only keep the last 3 timecards
       })));
     } catch (err) {
       console.error('Error fetching employee data:', err);
       setError('Failed to fetch employee data. Please try again later.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -66,18 +60,15 @@ const ManagerPage: React.FC = () => {
     navigate('/login');
   };
 
-  const toggleEmployeeCard = (employeeId: string) => {
-    setExpandedEmployeeId(prevId => prevId === employeeId ? null : employeeId);
-    // Reset expanded timecards when toggling employee cards
-    setExpandedTimecardIds([]);
+  const toggleEmployee = (employeeId: string) => {
+    setExpandedEmployee(prev => prev === employeeId ? null : employeeId);
   };
 
   const toggleTimecard = (timecardId: string) => {
-    setExpandedTimecardIds(prev => 
-      prev.includes(timecardId)
-        ? prev.filter(id => id !== timecardId)
-        : [...prev, timecardId]
-    );
+    setExpandedTimecards(prev => ({
+      ...prev,
+      [timecardId]: !prev[timecardId]
+    }));
   };
 
   const formatDate = (dateString: string): string => {
@@ -85,34 +76,27 @@ const ManagerPage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-
-  return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Manager's Timecard View</h1>
-      <button onClick={handleLogout} style={{ position: 'absolute', top: '20px', right: '20px', padding: '10px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-        Logout
-      </button>
-
+  const renderDefaultView = () => (
+    <>
       {employees.map(employee => (
-        <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
+        <div key={employee._id} style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px', borderRadius: '4px' }}>
           <div 
-            onClick={() => toggleEmployeeCard(employee._id)}
+            onClick={() => toggleEmployee(employee._id)} 
             style={{ 
+              cursor: 'pointer', 
               display: 'flex', 
               justifyContent: 'space-between', 
-              alignItems: 'center', 
-              backgroundColor: '#f0f0f0', 
-              padding: '15px',
-              cursor: 'pointer'
+              alignItems: 'center',
+              backgroundColor: '#f0f0f0',
+              padding: '10px',
+              borderRadius: '4px'
             }}
           >
             <h2 style={{ margin: 0 }}>{employee.name} - {employee.email}</h2>
-            <span>{expandedEmployeeId === employee._id ? '▲' : '▼'}</span>
+            <span>{expandedEmployee === employee._id ? '▲' : '▼'}</span>
           </div>
-          {expandedEmployeeId === employee._id && (
-            <div style={{ padding: '15px' }}>
+          {expandedEmployee === employee._id && (
+            <div style={{ marginTop: '10px' }}>
               {employee.timecards.map(timecard => (
                 <div key={timecard._id} style={{ marginBottom: '10px', backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
                   <div 
@@ -125,9 +109,9 @@ const ManagerPage: React.FC = () => {
                     }}
                   >
                     <h3 style={{ margin: 0 }}>Week of {formatDate(timecard.weekStartDate)} - Total Hours: {timecard.totalHours.toFixed(2)}</h3>
-                    <span>{expandedTimecardIds.includes(timecard._id) ? '▲' : '▼'}</span>
+                    <span>{expandedTimecards[timecard._id] ? '▲' : '▼'}</span>
                   </div>
-                  {expandedTimecardIds.includes(timecard._id) && (
+                  {expandedTimecards[timecard._id] && (
                     <div style={{ marginTop: '10px' }}>
                       <p>Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
                       {timecard.entries.map(entry => (
@@ -144,6 +128,64 @@ const ManagerPage: React.FC = () => {
           )}
         </div>
       ))}
+    </>
+  );
+
+  const renderEmployeeManagement = () => (
+    <div>
+      <h2>Employee Management</h2>
+      {/* Add employee management functionality here */}
+    </div>
+  );
+
+  const renderHistory = () => (
+    <div>
+      <h2>Historical Time Cards</h2>
+      {/* Add historical time card viewing functionality here */}
+    </div>
+  );
+
+  const renderTimeCardGeneration = () => (
+    <div>
+      <h2>Time Card Generation</h2>
+      {/* Add time card generation functionality here */}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Manager's Dashboard</h1>
+      
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+        <Button onClick={() => setActiveView('employeeManagement')}>
+          Employee Management
+        </Button>
+        <Button onClick={() => setActiveView('history')}>
+          History
+        </Button>
+        <Button onClick={() => setActiveView('timeCardGeneration')}>
+          Time Card Generation
+        </Button>
+      </div>
+
+      <Button 
+        onClick={handleLogout} 
+        style={{ 
+          position: 'absolute', 
+          top: '20px', 
+          right: '20px',
+        }}
+        variant="destructive"
+      >
+        Logout
+      </Button>
+      
+      {error && <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>}
+
+      {activeView === 'default' && renderDefaultView()}
+      {activeView === 'employeeManagement' && renderEmployeeManagement()}
+      {activeView === 'history' && renderHistory()}
+      {activeView === 'timeCardGeneration' && renderTimeCardGeneration()}
     </div>
   );
 };
