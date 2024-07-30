@@ -148,7 +148,8 @@ const ManagerPage: React.FC = () => {
         <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-white hover:text-gray-300">
           <X size={24} />
         </button>
-        <h2 className="text-2xl font-bold mb-8 mt-8">Dashboard</h2>
+        //<h2 className="text-2xl font-bold mb-8 mt-8">Dashboard</h2>
+		<h2 className="bg-gray-100 min-h-screen text-red-500">Dashboard</h2>
         <nav>
           <ul className="space-y-4">
             <li>
