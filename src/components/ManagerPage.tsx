@@ -344,7 +344,7 @@ const ManagerPage: React.FC = () => {
           <button onClick={() => setMenuOpen(true)} className="text-gray-500 hover:text-gray-700">
             <Menu size={24} />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Manager's Dashboard</h1>
+          <h1 className="text-red-500 text-2xl font-bold">Manager's Dashboard</h1>
           <button 
             onClick={handleLogout}
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center"
