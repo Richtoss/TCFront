@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, ChevronUp, LogOut, User, Clock, Calendar, AlertCircle, Trash2 } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronUp, LogOut, User, Clock, Calendar, AlertCircle, Trash2, Edit } from 'lucide-react';
 
 interface TimecardEntry {
   id: number;
@@ -41,6 +41,7 @@ const ManagerPage: React.FC = () => {
   const [historicalEmployees, setHistoricalEmployees] = useState<Employee[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [expandedTimecards, setExpandedTimecards] = useState<Record<string, boolean>>({});
+  const [editingTimecards, setEditingTimecards] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>('');
   const [activeView, setActiveView] = useState<'timeCards' | 'employeeManagement' | 'history' | 'timeCardGeneration'>('timeCards');
   const [showNewEmployeeForm, setShowNewEmployeeForm] = useState(false);
@@ -61,7 +62,6 @@ const ManagerPage: React.FC = () => {
     endTime: '',
     description: ''
   });
-  const [editingTimecardId, setEditingTimecardId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,6 +109,13 @@ const ManagerPage: React.FC = () => {
 
   const toggleTimecard = (timecardId: string) => {
     setExpandedTimecards(prev => ({
+      ...prev,
+      [timecardId]: !prev[timecardId]
+    }));
+  };
+
+  const toggleEditTimecard = (timecardId: string) => {
+    setEditingTimecards(prev => ({
       ...prev,
       [timecardId]: !prev[timecardId]
     }));
@@ -196,7 +203,6 @@ const ManagerPage: React.FC = () => {
         ));
 
         setNewEntry({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
-        setEditingTimecardId(null);
         setError('');
       } catch (err) {
         console.error('Error adding entry:', err);
@@ -260,6 +266,21 @@ const ManagerPage: React.FC = () => {
       console.error('Error marking timecard as complete:', err);
       setError('Failed to mark timecard as complete. Please try again.');
     }
+  };
+
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let hour = 4; hour <= 21; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        options.push(
+          <option key={time} value={time}>
+            {time}
+          </option>
+        );
+      }
+    }
+    return options;
   };
 
   const renderMenu = () => (
@@ -332,7 +353,16 @@ const ManagerPage: React.FC = () => {
                   </div>
                   {expandedTimecards[timecard._id] && (
                     <div className="mt-4 pl-4">
-                      <p className="text-sm text-gray-300 mb-2">Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm text-gray-300">Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
+                        <button
+                          onClick={() => toggleEditTimecard(timecard._id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1 px-2 rounded transition duration-200 flex items-center"
+                        >
+                          <Edit size={16} className="mr-1" />
+                          {editingTimecards[timecard._id] ? 'Cancel Edit' : 'Edit Time Card'}
+                        </button>
+                      </div>
                       {timecard.entries.map(entry => (
                         <div key={entry.id} className="bg-gray-700 rounded p-3 mb-2 flex justify-between items-center">
                           <div>
@@ -343,7 +373,7 @@ const ManagerPage: React.FC = () => {
                             <span className="text-sm text-gray-300 mr-4">
                               {calculateHoursDifference(entry.startTime, entry.endTime).toFixed(2)} hours
                             </span>
-                            {!timecard.completed && (
+                            {editingTimecards[timecard._id] && (
                               <button 
                                 onClick={() => deleteEntry(employee._id, timecard._id, entry.id)}
                                 className="text-red-400 hover:text-red-300"
@@ -354,7 +384,7 @@ const ManagerPage: React.FC = () => {
                           </div>
                         </div>
                       ))}
-                      {!timecard.completed && (
+                      {editingTimecards[timecard._id] && (
                         <div className="mt-4">
                           <h5 className="text-white font-medium mb-2">Add New Entry</h5>
                           <div className="grid grid-cols-2 gap-4">
@@ -377,20 +407,24 @@ const ManagerPage: React.FC = () => {
                               placeholder="Job Name"
                               className="bg-gray-700 text-white rounded p-2"
                             />
-                            <input
-                              type="time"
+                            <select
                               name="startTime"
                               value={newEntry.startTime}
                               onChange={handleNewEntryChange}
                               className="bg-gray-700 text-white rounded p-2"
-                            />
-                            <input
-                              type="time"
+                            >
+                              <option value="">Start Time</option>
+                              {generateTimeOptions()}
+                            </select>
+                            <select
                               name="endTime"
                               value={newEntry.endTime}
                               onChange={handleNewEntryChange}
                               className="bg-gray-700 text-white rounded p-2"
-                            />
+                            >
+                              <option value="">End Time</option>
+                              {generateTimeOptions()}
+                            </select>
                             <input
                               type="text"
                               name="description"
@@ -402,16 +436,16 @@ const ManagerPage: React.FC = () => {
                           </div>
                           <button
                             onClick={() => addEntry(employee._id, timecard._id)}
-                            className="mt-2 bg-blue-600 text-white rounded p-2 hover:bg-blue-700 transition duration-200"
+                            className="mt-2 bg-green-600 text-white rounded p-2 hover:bg-green-700 transition duration-200"
                           >
                             Add Entry
                           </button>
                         </div>
                       )}
-                      {!timecard.completed && (
+                      {!timecard.completed && !editingTimecards[timecard._id] && (
                         <button
                           onClick={() => markTimecardComplete(employee._id, timecard._id)}
-                          className="mt-4 bg-green-600 text-white rounded p-2 hover:bg-green-700 transition duration-200"
+                          className="mt-4 bg-yellow-600 text-white rounded p-2 hover:bg-yellow-700 transition duration-200"
                         >
                           Mark Complete
                         </button>
@@ -570,3 +604,4 @@ const ManagerPage: React.FC = () => {
 };
 
 export default ManagerPage;
+					
