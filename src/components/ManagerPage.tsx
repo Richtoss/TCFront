@@ -143,36 +143,35 @@ const ManagerPage: React.FC = () => {
   };
 
   const renderMenu = () => (
-    <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${menuOpen ? '' : 'hidden'}`} onClick={() => setMenuOpen(false)}>
+    <div className={`fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 ${menuOpen ? '' : 'hidden'}`} onClick={() => setMenuOpen(false)}>
       <div className="relative left-0 top-0 w-64 h-full bg-gray-800 text-white p-4" onClick={e => e.stopPropagation()}>
         <button onClick={() => setMenuOpen(false)} className="absolute top-4 right-4 text-white hover:text-gray-300">
           <X size={24} />
         </button>
-        //<h2 className="text-2xl font-bold mb-8 mt-8">Dashboard</h2>
-		<h2 className="bg-gray-100 min-h-screen text-red-500">Dashboard</h2>
+        <h2 className="text-2xl font-bold mb-8 mt-8">Dashboard</h2>
         <nav>
           <ul className="space-y-4">
             <li>
-              <button onClick={() => { setActiveView('timeCards'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
-                <Clock className="inline-block mr-2" size={18} />
+              <button onClick={() => { setActiveView('timeCards'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200 flex items-center">
+                <Clock className="mr-2" size={18} />
                 Time Cards
               </button>
             </li>
             <li>
-              <button onClick={() => { setActiveView('employeeManagement'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
-                <User className="inline-block mr-2" size={18} />
+              <button onClick={() => { setActiveView('employeeManagement'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200 flex items-center">
+                <User className="mr-2" size={18} />
                 Employee Management
               </button>
             </li>
             <li>
-              <button onClick={() => { setActiveView('history'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
-                <Calendar className="inline-block mr-2" size={18} />
+              <button onClick={() => { setActiveView('history'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200 flex items-center">
+                <Calendar className="mr-2" size={18} />
                 History
               </button>
             </li>
             <li>
-              <button onClick={() => { setActiveView('timeCardGeneration'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
-                <AlertCircle className="inline-block mr-2" size={18} />
+              <button onClick={() => { setActiveView('timeCardGeneration'); setMenuOpen(false); }} className="w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200 flex items-center">
+                <AlertCircle className="mr-2" size={18} />
                 Time Card Generation
               </button>
             </li>
@@ -184,40 +183,40 @@ const ManagerPage: React.FC = () => {
 
   const renderTimeCards = (employeeData: Employee[], title: string) => (
     <div>
-      <h2 className="text-2xl font-bold mb-6">{title}</h2>
+      <h2 className="text-2xl font-bold mb-6 text-white">{title}</h2>
       {employeeData.map(employee => (
-        <div key={employee._id} className="bg-white shadow-md rounded-lg mb-6 overflow-hidden">
+        <div key={employee._id} className="bg-gray-800 shadow-md rounded-lg mb-6 overflow-hidden">
           <div 
             onClick={() => toggleEmployee(employee._id)} 
-            className="bg-gray-50 px-6 py-4 cursor-pointer flex justify-between items-center"
+            className="bg-gray-700 px-6 py-4 cursor-pointer flex justify-between items-center"
           >
-            <h3 className="text-lg font-semibold">{employee.name}</h3>
+            <h3 className="text-lg font-semibold text-white">{employee.name}</h3>
             <div className="flex items-center">
-              <span className="text-sm text-gray-600 mr-4">{employee.email}</span>
-              {expandedEmployee === employee._id ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              <span className="text-sm text-gray-300 mr-4">{employee.email}</span>
+              {expandedEmployee === employee._id ? <ChevronUp size={24} className="text-gray-300" /> : <ChevronDown size={24} className="text-gray-300" />}
             </div>
           </div>
           {expandedEmployee === employee._id && (
             <div className="px-6 py-4">
               {employee.timecards.map(timecard => (
-                <div key={timecard._id} className="border-b border-gray-200 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                <div key={timecard._id} className="border-b border-gray-600 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
                   <div 
                     onClick={() => toggleTimecard(timecard._id)}
                     className="flex justify-between items-center cursor-pointer"
                   >
-                    <h4 className="font-medium">Week of {formatDate(timecard.weekStartDate)}</h4>
+                    <h4 className="font-medium text-white">Week of {formatDate(timecard.weekStartDate)}</h4>
                     <div className="flex items-center">
-                      <span className="text-sm text-gray-600 mr-4">Total Hours: {timecard.totalHours.toFixed(2)}</span>
-                      {expandedTimecards[timecard._id] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                      <span className="text-sm text-gray-300 mr-4">Total Hours: {timecard.totalHours.toFixed(2)}</span>
+                      {expandedTimecards[timecard._id] ? <ChevronUp size={20} className="text-gray-300" /> : <ChevronDown size={20} className="text-gray-300" />}
                     </div>
                   </div>
                   {expandedTimecards[timecard._id] && (
                     <div className="mt-4 pl-4">
-                      <p className="text-sm text-gray-600 mb-2">Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
+                      <p className="text-sm text-gray-300 mb-2">Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
                       {timecard.entries.map(entry => (
-                        <div key={entry.id} className="bg-gray-50 rounded p-3 mb-2">
-                          <p className="font-medium">{entry.day} - {entry.jobName}</p>
-                          <p className="text-sm text-gray-600">{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                        <div key={entry.id} className="bg-gray-700 rounded p-3 mb-2">
+                          <p className="font-medium text-white">{entry.day} - {entry.jobName}</p>
+                          <p className="text-sm text-gray-300">{entry.startTime} to {entry.endTime} - {entry.description}</p>
                         </div>
                       ))}
                     </div>
@@ -233,22 +232,22 @@ const ManagerPage: React.FC = () => {
 
   const renderEmployeeManagement = () => (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Employee Management</h2>
+      <h2 className="text-2xl font-bold mb-6 text-white">Employee Management</h2>
       <button 
         onClick={() => setShowNewEmployeeForm(true)} 
-        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
       >
         Create New Employee
       </button>
       
       {showNewEmployeeForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-gray-800">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">New Employee Information</h3>
+              <h3 className="text-lg font-medium text-white mb-4">New Employee Information</h3>
               <form onSubmit={handleNewEmployeeSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-300">Name</label>
                   <input
                     type="text"
                     id="name"
@@ -256,11 +255,11 @@ const ManagerPage: React.FC = () => {
                     value={newEmployee.name}
                     onChange={handleNewEmployeeChange}
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
                   <input
                     type="email"
                     id="email"
@@ -268,11 +267,11 @@ const ManagerPage: React.FC = () => {
                     value={newEmployee.email}
                     onChange={handleNewEmployeeChange}
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-300">Password</label>
                   <input
                     type="password"
                     id="password"
@@ -280,18 +279,18 @@ const ManagerPage: React.FC = () => {
                     value={newEmployee.password}
                     onChange={handleNewEmployeeChange}
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300">Phone</label>
                   <input
                     type="tel"
                     id="phone"
                     name="phone"
                     value={newEmployee.phone}
                     onChange={handleNewEmployeeChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div className="flex items-center">
@@ -303,24 +302,24 @@ const ManagerPage: React.FC = () => {
                     onChange={handleNewEmployeeChange}
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="isManager" className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor="isManager" className="ml-2 block text-sm text-gray-300">
                     Is Manager
                   </label>
                 </div>
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-300">Notes</label>
                   <textarea
                     id="notes"
                     name="notes"
                     value={newEmployee.notes}
                     onChange={handleNewEmployeeChange}
                     rows={3}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
-                <div className="flex justify-end space-x-3">
-                  <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200">Submit</button>
-                  <button type="button" onClick={() => setShowNewEmployeeForm(false)} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-200">Cancel</button>
+               <div className="flex justify-end space-x-3">
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">Submit</button>
+                  <button type="button" onClick={() => setShowNewEmployeeForm(false)} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-200">Cancel</button>
                 </div>
               </form>
             </div>
@@ -332,22 +331,22 @@ const ManagerPage: React.FC = () => {
 
   const renderTimeCardGeneration = () => (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Time Card Generation</h2>
-      <p className="text-gray-600">This feature is not yet implemented.</p>
+      <h2 className="text-2xl font-bold mb-6 text-white">Time Card Generation</h2>
+      <p className="text-gray-300">This feature is not yet implemented.</p>
     </div>
   );
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <header className="bg-white shadow-md">
+    <div className="bg-gray-900 min-h-screen text-white">
+      <header className="bg-gray-800 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <button onClick={() => setMenuOpen(true)} className="text-gray-500 hover:text-gray-700">
+          <button onClick={() => setMenuOpen(true)} className="text-gray-300 hover:text-white">
             <Menu size={24} />
           </button>
-          <h1 className="text-red-500 text-2xl font-bold">Manager's Dashboard</h1>
+          <h1 className="text-2xl font-bold text-white">Manager's Dashboard</h1>
           <button 
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center"
           >
             <LogOut size={18} className="mr-2" />
             Logout
@@ -359,7 +358,7 @@ const ManagerPage: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+          <div className="bg-red-900 border-l-4 border-red-500 text-red-100 p-4 mb-6" role="alert">
             <p>{error}</p>
           </div>
         )}
