@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, ChevronUp, LogOut, User, Clock, Calendar, AlertCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronUp, LogOut, User, Clock, Calendar, AlertCircle, Trash2 } from 'lucide-react';
 
 interface TimecardEntry {
   id: number;
@@ -53,6 +53,15 @@ const ManagerPage: React.FC = () => {
     notes: ''
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [newEntry, setNewEntry] = useState<TimecardEntry>({
+    id: 0,
+    day: '',
+    jobName: '',
+    startTime: '',
+    endTime: '',
+    description: ''
+  });
+  const [editingTimecardId, setEditingTimecardId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -110,6 +119,14 @@ const ManagerPage: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
+  const calculateHoursDifference = (startTime: string, endTime: string): number => {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    return (endMinutes - startMinutes) / 60;
+  };
+
   const handleNewEmployeeChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewEmployee(prev => ({
@@ -139,6 +156,109 @@ const ManagerPage: React.FC = () => {
     } catch (err) {
       console.error('Error creating new employee:', err);
       setError('Failed to create new employee. Please try again.');
+    }
+  };
+
+  const handleNewEntryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewEntry(prev => ({ ...prev, [name]: value }));
+  };
+
+  const addEntry = async (employeeId: string, timecardId: string) => {
+    if (newEntry.day && newEntry.jobName && newEntry.startTime && newEntry.endTime) {
+      try {
+        const token = localStorage.getItem('token');
+        const timecard = employees
+          .find(emp => emp._id === employeeId)?.timecards
+          .find(tc => tc._id === timecardId);
+
+        if (!timecard) {
+          setError('Timecard not found');
+          return;
+        }
+
+        const newEntryWithId = { ...newEntry, id: Date.now() };
+        const updatedEntries = [...timecard.entries, newEntryWithId];
+        const newTotalHours = updatedEntries.reduce((total, entry) => 
+          total + calculateHoursDifference(entry.startTime, entry.endTime), 0
+        );
+
+        const res = await axios.put<Timecard>(
+          `https://tcbackend.onrender.com/api/timecard/${timecardId}`,
+          { entries: updatedEntries, totalHours: newTotalHours },
+          { headers: { 'x-auth-token': token } }
+        );
+
+        setEmployees(employees.map(emp => 
+          emp._id === employeeId 
+            ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
+            : emp
+        ));
+
+        setNewEntry({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
+        setEditingTimecardId(null);
+        setError('');
+      } catch (err) {
+        console.error('Error adding entry:', err);
+        setError('Failed to add entry. Please try again.');
+      }
+    } else {
+      setError('Please fill in all required fields.');
+    }
+  };
+
+  const deleteEntry = async (employeeId: string, timecardId: string, entryId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const timecard = employees
+        .find(emp => emp._id === employeeId)?.timecards
+        .find(tc => tc._id === timecardId);
+
+      if (!timecard) {
+        setError('Timecard not found');
+        return;
+      }
+
+      const updatedEntries = timecard.entries.filter(entry => entry.id !== entryId);
+      const newTotalHours = updatedEntries.reduce((total, entry) => 
+        total + calculateHoursDifference(entry.startTime, entry.endTime), 0
+      );
+
+      const res = await axios.put<Timecard>(
+        `https://tcbackend.onrender.com/api/timecard/${timecardId}`,
+        { entries: updatedEntries, totalHours: newTotalHours },
+        { headers: { 'x-auth-token': token } }
+      );
+
+      setEmployees(employees.map(emp => 
+        emp._id === employeeId 
+          ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
+          : emp
+      ));
+    } catch (err) {
+      console.error('Error deleting entry:', err);
+      setError('Failed to delete entry. Please try again.');
+    }
+  };
+
+  const markTimecardComplete = async (employeeId: string, timecardId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put<Timecard>(
+        `https://tcbackend.onrender.com/api/timecard/${timecardId}/complete`,
+        {},
+        { headers: { 'x-auth-token': token } }
+      );
+
+      setEmployees(employees.map(emp => 
+        emp._id === employeeId 
+          ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
+          : emp
+      ));
+      setError('');
+    } catch (err) {
+      console.error('Error marking timecard as complete:', err);
+      setError('Failed to mark timecard as complete. Please try again.');
     }
   };
 
@@ -214,11 +334,88 @@ const ManagerPage: React.FC = () => {
                     <div className="mt-4 pl-4">
                       <p className="text-sm text-gray-300 mb-2">Status: {timecard.completed ? 'Completed' : 'In Progress'}</p>
                       {timecard.entries.map(entry => (
-                        <div key={entry.id} className="bg-gray-700 rounded p-3 mb-2">
-                          <p className="font-medium text-white">{entry.day} - {entry.jobName}</p>
-                          <p className="text-sm text-gray-300">{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                        <div key={entry.id} className="bg-gray-700 rounded p-3 mb-2 flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-white">{entry.day} - {entry.jobName}</p>
+                            <p className="text-sm text-gray-300">{entry.startTime} to {entry.endTime} - {entry.description}</p>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-sm text-gray-300 mr-4">
+                              {calculateHoursDifference(entry.startTime, entry.endTime).toFixed(2)} hours
+                            </span>
+                            {!timecard.completed && (
+                              <button 
+                                onClick={() => deleteEntry(employee._id, timecard._id, entry.id)}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
+                      {!timecard.completed && (
+                        <div className="mt-4">
+                          <h5 className="text-white font-medium mb-2">Add New Entry</h5>
+                          <div className="grid grid-cols-2 gap-4">
+                            <select
+                              name="day"
+                              value={newEntry.day}
+                              onChange={handleNewEntryChange}
+                              className="bg-gray-700 text-white rounded p-2"
+                            >
+                              <option value="">Select Day</option>
+                              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                                <option key={day} value={day}>{day}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              name="jobName"
+                              value={newEntry.jobName}
+                              onChange={handleNewEntryChange}
+                              placeholder="Job Name"
+                              className="bg-gray-700 text-white rounded p-2"
+                            />
+                            <input
+                              type="time"
+                              name="startTime"
+                              value={newEntry.startTime}
+                              onChange={handleNewEntryChange}
+                              className="bg-gray-700 text-white rounded p-2"
+                            />
+                            <input
+                              type="time"
+                              name="endTime"
+                              value={newEntry.endTime}
+                              onChange={handleNewEntryChange}
+                              className="bg-gray-700 text-white rounded p-2"
+                            />
+                            <input
+                              type="text"
+                              name="description"
+                              value={newEntry.description}
+                              onChange={handleNewEntryChange}
+                              placeholder="Description"
+                              className="bg-gray-700 text-white rounded p-2 col-span-2"
+                            />
+                          </div>
+                          <button
+                            onClick={() => addEntry(employee._id, timecard._id)}
+                            className="mt-2 bg-blue-600 text-white rounded p-2 hover:bg-blue-700 transition duration-200"
+                          >
+                            Add Entry
+                          </button>
+                        </div>
+                      )}
+                      {!timecard.completed && (
+                        <button
+                          onClick={() => markTimecardComplete(employee._id, timecard._id)}
+                          className="mt-4 bg-green-600 text-white rounded p-2 hover:bg-green-700 transition duration-200"
+                        >
+                          Mark Complete
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -317,7 +514,7 @@ const ManagerPage: React.FC = () => {
                     className="mt-1 block w-full border border-gray-600 rounded-md shadow-sm py-2 px-3 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
-               <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-3">
                   <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">Submit</button>
                   <button type="button" onClick={() => setShowNewEmployeeForm(false)} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-200">Cancel</button>
                 </div>
