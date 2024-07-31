@@ -219,7 +219,8 @@ const ManagerPage: React.FC = () => {
   };
 
   const deleteEntry = async (employeeId: string, timecardId: string, entryId: number) => {
-    try {
+    console.log('Deleting entry:', { employeeId, timecardId, entryId });
+	try {
       const token = localStorage.getItem('token');
       const employee = employees.find(emp => emp._id === employeeId);
       const timecard = employee?.timecards.find(tc => tc._id === timecardId);
