@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, ChevronUp, LogOut, User, Clock, Calendar, AlertCircle, Trash2, Edit } from 'lucide-react';
 
 interface TimecardEntry {
-  id: number;
+  _id: number;
   day: string;
   jobName: string;
   startTime: string;
@@ -218,7 +218,7 @@ const ManagerPage: React.FC = () => {
     }
   };
 
-  const deleteEntry = async (employeeId: string, timecardId: string, entryId: number) => {
+  const deleteEntry = async (employeeId: string, timecardId: string, entryId: string) => {
     console.log('Deleting entry:', { employeeId, timecardId, entryId });
 	try {
       const token = localStorage.getItem('token');
@@ -231,7 +231,7 @@ const ManagerPage: React.FC = () => {
       }
 
       // Filter out the specific entry to be deleted
-      const updatedEntries = timecard.entries.filter(entry => entry.id !== entryId);
+      const updatedEntries = timecard.entries.filter(entry => entry._id !== entryId);
 
       // Recalculate total hours
       const newTotalHours = updatedEntries.reduce((total, entry) => 
@@ -401,7 +401,7 @@ const ManagerPage: React.FC = () => {
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  deleteEntry(employee._id, timecard._id, entry.id);
+                                  deleteEntry(employee._id, timecard._id, entry._id);
                                 }}
                                 className="text-red-400 hover:text-red-300"
                               >
