@@ -172,51 +172,51 @@ const ManagerPage: React.FC = () => {
   };
 
   const addEntry = async (employeeId: string, timecardId: string) => {
-    if (newEntry.day && newEntry.jobName && newEntry.startTime && newEntry.endTime) {
-      try {
-        const token = localStorage.getItem('token');
-        const timecard = employees
-          .find(emp => emp._id === employeeId)?.timecards
-          .find(tc => tc._id === timecardId);
+     if (newEntry.day && newEntry.jobName && newEntry.startTime && newEntry.endTime) {
+       try {
+         const token = localStorage.getItem('token');
+         const timecard = employees
+           .find(emp => emp._id === employeeId)?.timecards
+           .find(tc => tc._id === timecardId);
 
-        if (!timecard) {
-          setError('Timecard not found');
-          return;
-        }
+         if (!timecard) {
+           setError('Timecard not found');
+           return;
+         }
 
-        const newEntryWithId = { ...newEntry, _id: Date.now().toString() };
-        const updatedEntries = [...timecard.entries, newEntryWithId];
-        const newTotalHours = updatedEntries.reduce((total, entry) => 
-          total + calculateHoursDifference(entry.startTime, entry.endTime), 0
-        );
+         const newEntryWithId = { ...newEntry, _id: Date.now().toString() };
+         const updatedEntries = [...timecard.entries, newEntryWithId];
+         const newTotalHours = updatedEntries.reduce((total, entry) => 
+           total + calculateHoursDifference(entry.startTime, entry.endTime), 0
+         );
 
-        const res = await axios.put<Timecard>(
-          `https://tcbackend.onrender.com/api/timecard/${timecardId}`,
-          { entries: updatedEntries, totalHours: newTotalHours },
-          { headers: { 'x-auth-token': token } }
-        );
+         const res = await axios.put<Timecard>(
+           `https://tcbackend.onrender.com/api/timecard/${timecardId}`,
+           { entries: updatedEntries, totalHours: newTotalHours },
+           { headers: { 'x-auth-token': token } }
+         );
 
-        setEmployees(prevEmployees => prevEmployees.map(emp => 
-          emp._id === employeeId 
-            ? { 
-                ...emp, 
-                timecards: emp.timecards.map(tc => 
-                  tc._id === timecardId ? res.data : tc
-                )
-              }
-            : emp
-        ));
+         setEmployees(prevEmployees => prevEmployees.map(emp => 
+           emp._id === employeeId 
+             ? { 
+                 ...emp, 
+                 timecards: emp.timecards.map(tc => 
+                   tc._id === timecardId ? res.data : tc
+                 )
+               }
+             : emp
+         ));
 
-        setNewEntry({ _id: '', day: '', jobName: '', startTime: '', endTime: '', description: '' });
-        setError('');
-      } catch (err) {
-        console.error('Error adding entry:', err);
-        setError('Failed to add entry. Please try again.');
-      }
-    } else {
-      setError('Please fill in all required fields.');
-    }
-  };
+         setNewEntry({ _id: '', day: '', jobName: '', startTime: '', endTime: '', description: '' });
+         setError('');
+       } catch (err) {
+         console.error('Error adding entry:', err);
+         setError('Failed to add entry. Please try again.');
+       }
+     } else {
+       setError('Please fill in all required fields.');
+     }
+   };
 
   const deleteEntry = async (employeeId: string, timecardId: string, entryId: string) => {
     console.log('Deleting entry:', { employeeId, timecardId, entryId });
