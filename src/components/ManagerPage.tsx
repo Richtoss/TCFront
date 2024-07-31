@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, ChevronUp, LogOut, User, Clock, Calendar, AlertCircle, Trash2, Edit } from 'lucide-react';
 
 interface TimecardEntry {
-  _id: number;
+  _id: string;
   day: string;
   jobName: string;
   startTime: string;
@@ -55,7 +55,7 @@ const ManagerPage: React.FC = () => {
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const [newEntry, setNewEntry] = useState<TimecardEntry>({
-    id: 0,
+    _id: '',
     day: '',
     jobName: '',
     startTime: '',
@@ -184,7 +184,7 @@ const ManagerPage: React.FC = () => {
           return;
         }
 
-        const newEntryWithId = { ...newEntry, id: Date.now() };
+        const newEntryWithId = { ...newEntry, _id: Date.now().toString() };
         const updatedEntries = [...timecard.entries, newEntryWithId];
         const newTotalHours = updatedEntries.reduce((total, entry) => 
           total + calculateHoursDifference(entry.startTime, entry.endTime), 0
@@ -207,7 +207,7 @@ const ManagerPage: React.FC = () => {
             : emp
         ));
 
-        setNewEntry({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
+        setNewEntry({ _id: '', day: '', jobName: '', startTime: '', endTime: '', description: '' });
         setError('');
       } catch (err) {
         console.error('Error adding entry:', err);
@@ -220,7 +220,7 @@ const ManagerPage: React.FC = () => {
 
   const deleteEntry = async (employeeId: string, timecardId: string, entryId: string) => {
     console.log('Deleting entry:', { employeeId, timecardId, entryId });
-	try {
+    try {
       const token = localStorage.getItem('token');
       const employee = employees.find(emp => emp._id === employeeId);
       const timecard = employee?.timecards.find(tc => tc._id === timecardId);
@@ -388,7 +388,7 @@ const ManagerPage: React.FC = () => {
                         </button>
                       </div>
                       {timecard.entries.map(entry => (
-                        <div key={entry.id} className="bg-gray-700 rounded p-3 mb-2 flex justify-between items-center">
+                        <div key={entry._id} className="bg-gray-700 rounded p-3 mb-2 flex justify-between items-center">
                           <div>
                             <p className="font-medium text-white">{entry.day} - {entry.jobName}</p>
                             <p className="text-sm text-gray-300">{entry.startTime} to {entry.endTime} - {entry.description}</p>
