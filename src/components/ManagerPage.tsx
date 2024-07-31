@@ -216,9 +216,8 @@ const ManagerPage: React.FC = () => {
   const deleteEntry = async (employeeId: string, timecardId: string, entryId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const timecard = employees
-        .find(emp => emp._id === employeeId)?.timecards
-        .find(tc => tc._id === timecardId);
+      const employee = employees.find(emp => emp._id === employeeId);
+      const timecard = employee?.timecards.find(tc => tc._id === timecardId);
 
       if (!timecard) {
         setError('Timecard not found');
@@ -241,6 +240,8 @@ const ManagerPage: React.FC = () => {
           ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
           : emp
       ));
+
+      setError('');
     } catch (err) {
       console.error('Error deleting entry:', err);
       setError('Failed to delete entry. Please try again.');
@@ -375,7 +376,10 @@ const ManagerPage: React.FC = () => {
                             </span>
                             {editingTimecards[timecard._id] && (
                               <button 
-                                onClick={() => deleteEntry(employee._id, timecard._id, entry.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteEntry(employee._id, timecard._id, entry.id);
+                                }}
                                 className="text-red-400 hover:text-red-300"
                               >
                                 <Trash2 size={18} />
@@ -604,4 +608,3 @@ const ManagerPage: React.FC = () => {
 };
 
 export default ManagerPage;
-					
