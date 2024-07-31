@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TimecardEntry {
+  _id: string;  // Add this line
   id: number;
   day: string;
   jobName: string;
@@ -38,7 +39,15 @@ interface UserData {
 
 const EmployeePage: React.FC = () => {
   const [timecards, setTimecards] = useState<Timecard[]>([]);
-  const [newEntry, setNewEntry] = useState<TimecardEntry>({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
+  const [newEntry, setNewEntry] = useState<TimecardEntry>({ 
+    _id: '',  // Add this line
+    id: 0, 
+    day: '', 
+    jobName: '', 
+    startTime: '', 
+    endTime: '', 
+    description: '' 
+  });
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [name, setName] = useState<string>('');
@@ -180,7 +189,7 @@ const EmployeePage: React.FC = () => {
           setError('Timecard not found');
           return;
         }
-        const newEntryWithId = { ...newEntry, id: Date.now() };
+        const newEntryWithId = { ...newEntry, _id: Date.now().toString() };  // Generate a new _id
         const updatedEntries = [...timecard.entries, newEntryWithId];
         const newTotalHours = calculateTotalHours(updatedEntries);
         const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
@@ -190,7 +199,7 @@ const EmployeePage: React.FC = () => {
           headers: { 'x-auth-token': token }
         });
         setTimecards(timecards.map(card => card._id === cardId ? { ...res.data, expanded: true } : card));
-        setNewEntry({ id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
+        setNewEntry({ _id: '', id: 0, day: '', jobName: '', startTime: '', endTime: '', description: '' });
         setError('');
       } catch (err) {
         console.error('Error adding entry:', err);
@@ -213,7 +222,7 @@ const EmployeePage: React.FC = () => {
     return (endMinutes - startMinutes) / 60;
   };
 
-  const deleteEntry = async (cardId: string, entryId: number) => {
+  const deleteEntry = async (cardId: string, entryId: string) => {
     try {
       const token = localStorage.getItem('token');
       const timecard = timecards.find(tc => tc._id === cardId);
@@ -221,7 +230,7 @@ const EmployeePage: React.FC = () => {
         setError('Timecard not found');
         return;
       }
-      const updatedEntries = timecard.entries.filter(entry => entry.id !== entryId);
+      const updatedEntries = timecard.entries.filter(entry => entry._id !== entryId);
       const newTotalHours = calculateTotalHours(updatedEntries);
       const res = await axios.put<Timecard>(`https://tcbackend.onrender.com/api/timecard/${cardId}`, {
         entries: updatedEntries,
@@ -324,7 +333,7 @@ const EmployeePage: React.FC = () => {
             {timecard.expanded && (
               <div className="mt-4">
                 {timecard.entries.map((entry) => (
-                  <div key={entry.id} className="bg-gray-700 p-3 rounded mb-2">
+                  <div key={entry._id} className="bg-gray-700 p-3 rounded mb-2">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-medium">{entry.day} - {entry.jobName}</p>
@@ -335,7 +344,7 @@ const EmployeePage: React.FC = () => {
                         <p className="text-sm text-gray-300">{entry.startTime} - {entry.endTime}</p>
                         {!timecard.completed && (
                           <button 
-                            onClick={() => deleteEntry(timecard._id, entry.id)} 
+                            onClick={() => deleteEntry(timecard._id, entry._id)} 
                             className="text-red-400 text-sm mt-1 hover:text-red-300"
                           >
                             Delete Entry
