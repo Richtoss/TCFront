@@ -196,9 +196,14 @@ const ManagerPage: React.FC = () => {
           { headers: { 'x-auth-token': token } }
         );
 
-        setEmployees(employees.map(emp => 
+        setEmployees(prevEmployees => prevEmployees.map(emp => 
           emp._id === employeeId 
-            ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
+            ? { 
+                ...emp, 
+                timecards: emp.timecards.map(tc => 
+                  tc._id === timecardId ? res.data : tc
+                )
+              }
             : emp
         ));
 
@@ -224,20 +229,32 @@ const ManagerPage: React.FC = () => {
         return;
       }
 
+      // Filter out the specific entry to be deleted
       const updatedEntries = timecard.entries.filter(entry => entry.id !== entryId);
+
+      // Recalculate total hours
       const newTotalHours = updatedEntries.reduce((total, entry) => 
         total + calculateHoursDifference(entry.startTime, entry.endTime), 0
       );
 
+      // Send the update to the backend
       const res = await axios.put<Timecard>(
         `https://tcbackend.onrender.com/api/timecard/${timecardId}`,
         { entries: updatedEntries, totalHours: newTotalHours },
         { headers: { 'x-auth-token': token } }
       );
 
-      setEmployees(employees.map(emp => 
+      // Update the local state
+      setEmployees(prevEmployees => prevEmployees.map(emp => 
         emp._id === employeeId 
-          ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
+          ? { 
+              ...emp, 
+              timecards: emp.timecards.map(tc => 
+                tc._id === timecardId 
+                  ? { ...tc, entries: updatedEntries, totalHours: newTotalHours }
+                  : tc
+              )
+            }
           : emp
       ));
 
@@ -257,9 +274,14 @@ const ManagerPage: React.FC = () => {
         { headers: { 'x-auth-token': token } }
       );
 
-      setEmployees(employees.map(emp => 
+      setEmployees(prevEmployees => prevEmployees.map(emp => 
         emp._id === employeeId 
-          ? { ...emp, timecards: emp.timecards.map(tc => tc._id === timecardId ? res.data : tc) }
+          ? { 
+              ...emp, 
+              timecards: emp.timecards.map(tc => 
+                tc._id === timecardId ? res.data : tc
+              )
+            }
           : emp
       ));
       setError('');
